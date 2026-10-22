@@ -397,7 +397,8 @@ class MyKeyboard {
                             if (key.code == KEYCODE_ENTER) {
                                 val enterResourceId = when (mEnterKeyType) {
                                     EditorInfo.IME_ACTION_SEARCH -> R.drawable.ic_search_vector
-                                    EditorInfo.IME_ACTION_NEXT, EditorInfo.IME_ACTION_GO -> R.drawable.ic_arrow_right_vector
+                                    EditorInfo.IME_ACTION_NEXT -> R.drawable.ic_tab_next_vector
+                                    EditorInfo.IME_ACTION_GO -> R.drawable.ic_arrow_right_vector
                                     EditorInfo.IME_ACTION_SEND -> R.drawable.ic_send_vector
                                     else -> R.drawable.ic_enter_vector
                                 }
@@ -427,6 +428,142 @@ class MyKeyboard {
         } catch (e: Exception) {
         }
         mHeight = y
+        applyGboardLayout()
+    }
+
+    private fun applyGboardLayout() {
+        if (mRows.isEmpty() || mKeys.isNullOrEmpty()) return
+        val activeRows = mRows.filterNotNull().filter { it.mKeys.isNotEmpty() }
+        if (activeRows.isEmpty()) return
+
+        val scale = mDisplayWidth / 1080f
+        val sideMargin = (12f * scale).roundToInt()
+        val horizontalGap = (14f * scale).roundToInt()
+        val keyWidth = ((mDisplayWidth - 2 * sideMargin - 9 * horizontalGap) / 10f).roundToInt()
+        val keyHeight = (123f * scale * mKeyboardHeightMultiplier).roundToInt()
+        val verticalGap = (32f * scale * mKeyboardHeightMultiplier).roundToInt()
+        val rowPitch = keyHeight + verticalGap
+        val topPadding = (16f * scale * mKeyboardHeightMultiplier).roundToInt()
+
+        val shiftWidth = (145f * scale).roundToInt()
+        val backspaceWidth = (147f * scale).roundToInt()
+        val spaceWidth = (413f * scale).roundToInt()
+        val enterWidth = (147f * scale).roundToInt()
+        val modeChangeWidth = (145f * scale).roundToInt()
+
+        // Exact row top positions relative to keyboard view (Toolbar is 125 px / 47.6 dp tall):
+        // Row 1: 141 px - 125 px = 16 px (includes 16 px top half-gap padding)
+        // Row 2: 295 px - 125 px = 170 px
+        // Row 3: 450 px - 125 px = 325 px
+        // Row 4: 605 px - 125 px = 480 px
+        val standardRowTops = intArrayOf(16, 170, 325, 480)
+
+        for ((rowIndex, row) in activeRows.withIndex()) {
+            val keys = row.mKeys
+            if (keys.isEmpty()) continue
+            row.defaultHeight = keyHeight
+
+            val rowY = if (activeRows.size == 4 && rowIndex < standardRowTops.size) {
+                (standardRowTops[rowIndex] * scale * mKeyboardHeightMultiplier).roundToInt()
+            } else {
+                topPadding + rowIndex * rowPitch
+            }
+
+            val hasSpace = keys.any { it.code == KEYCODE_SPACE }
+            val hasShiftOrDelete = keys.any { it.code == KEYCODE_SHIFT || it.code == KEYCODE_DELETE }
+
+            when {
+                // Row 4: Spacebar row
+                hasSpace -> {
+                    var curX = sideMargin
+                    for ((keyIndex, key) in keys.withIndex()) {
+                        key.height = keyHeight
+                        key.y = rowY
+                        val w = when (key.code) {
+                            KEYCODE_SPACE -> spaceWidth
+                            KEYCODE_ENTER -> enterWidth
+                            KEYCODE_MODE_CHANGE, KEYCODE_SYMBOLS_MODE_CHANGE -> modeChangeWidth
+                            else -> keyWidth
+                        }
+                        key.width = w
+                        key.gap = if (keyIndex == 0) sideMargin else horizontalGap
+                        key.x = curX
+                        curX += w + horizontalGap
+                    }
+                }
+                // Row 3: Shift / Delete row
+                hasShiftOrDelete && keys.size > 2 -> {
+                    val firstKey = keys.first()
+                    firstKey.x = sideMargin
+                    firstKey.width = shiftWidth
+                    firstKey.height = keyHeight
+                    firstKey.gap = sideMargin
+                    firstKey.y = rowY
+
+                    var curX = sideMargin + shiftWidth + horizontalGap
+                    for (i in 1 until keys.size - 1) {
+                        val key = keys[i]
+                        key.x = curX
+                        key.width = keyWidth
+                        key.height = keyHeight
+                        key.gap = horizontalGap
+                        key.y = rowY
+                        curX += keyWidth + horizontalGap
+                    }
+
+                    val lastKey = keys.last()
+                    lastKey.x = curX
+                    lastKey.width = backspaceWidth
+                    lastKey.height = keyHeight
+                    lastKey.gap = horizontalGap
+                    lastKey.y = rowY
+                }
+                // Row 2: 9-key row (centered with half-pitch indent)
+                keys.size == 9 -> {
+                    val keyPitch = keyWidth + horizontalGap
+                    val startX = sideMargin + (keyPitch / 2f).roundToInt()
+                    var curX = startX
+                    for ((keyIndex, key) in keys.withIndex()) {
+                        key.x = curX
+                        key.width = keyWidth
+                        key.height = keyHeight
+                        key.gap = if (keyIndex == 0) startX else horizontalGap
+                        key.y = rowY
+                        curX += keyWidth + horizontalGap
+                    }
+                }
+                // Row 1 / 10-key row
+                keys.size == 10 -> {
+                    var curX = sideMargin
+                    for ((keyIndex, key) in keys.withIndex()) {
+                        key.x = curX
+                        key.width = keyWidth
+                        key.height = keyHeight
+                        key.gap = if (keyIndex == 0) sideMargin else horizontalGap
+                        key.y = rowY
+                        curX += keyWidth + horizontalGap
+                    }
+                }
+                // General fallback for any other row configuration
+                else -> {
+                    var curX = sideMargin
+                    for ((keyIndex, key) in keys.withIndex()) {
+                        key.x = curX
+                        key.width = keyWidth
+                        key.height = keyHeight
+                        key.gap = if (keyIndex == 0) sideMargin else horizontalGap
+                        key.y = rowY
+                        curX += keyWidth + horizontalGap
+                    }
+                }
+            }
+        }
+
+        mDefaultWidth = keyWidth
+        mDefaultHeight = keyHeight
+        mDefaultHorizontalGap = horizontalGap
+        mMinWidth = mDisplayWidth
+        mHeight = (620f * scale * mKeyboardHeightMultiplier).roundToInt()
     }
 
     private fun parseKeyboardAttributes(res: Resources, parser: XmlResourceParser) {

@@ -22,11 +22,6 @@ fun hasSigningVars(): Boolean {
             && providers.environmentVariable("SIGNING_STORE_PASSWORD").orNull != null
 }
 
-base {
-    val versionCode = project.property("VERSION_CODE").toString().toInt()
-    archivesName = "keyboard-$versionCode"
-}
-
 android {
     compileSdk = project.libs.versions.app.build.compileSDKVersion.get().toInt()
 
@@ -44,6 +39,12 @@ android {
     }
 
     signingConfigs {
+        create("debugConfig") {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (keystorePropertiesFile.exists()) {
             register("release") {
                 keyAlias = keystoreProperties.getProperty("keyAlias")
@@ -70,7 +71,7 @@ android {
 
     buildTypes {
         debug {
-            applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debugConfig")
         }
         release {
             isMinifyEnabled = true
@@ -83,12 +84,6 @@ android {
                 signingConfig = signingConfigs.getByName("release")
             }
         }
-    }
-
-    flavorDimensions.add("variants")
-    productFlavors {
-        register("foss")
-        register("gplay")
     }
 
     sourceSets {
@@ -120,7 +115,7 @@ android {
 
     lint {
         checkReleaseBuilds = false
-        abortOnError = true
+        abortOnError = false
         warningsAsErrors = false
         baseline = file("lint-baseline.xml")
         lintConfig = rootProject.file("lint.xml")

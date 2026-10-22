@@ -48,10 +48,15 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat.Type
 import androidx.core.view.updatePadding
 import org.fossify.commons.extensions.applyColorFilter
+import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.beVisible
+import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.getSharedPrefs
 import org.fossify.commons.extensions.setSystemBarsAppearance
+import org.fossify.keyboard.helpers.SuggestionEngine
 import org.fossify.commons.helpers.ACCENT_COLOR
 import org.fossify.commons.helpers.BACKGROUND_COLOR
 import org.fossify.commons.helpers.CUSTOM_ACCENT_COLOR
@@ -122,6 +127,7 @@ import org.fossify.keyboard.helpers.SHOW_KEY_BORDERS
 import org.fossify.keyboard.helpers.SHOW_NUMBERS_ROW
 import org.fossify.keyboard.helpers.ShiftState
 import org.fossify.keyboard.helpers.VOICE_INPUT_METHOD
+import org.fossify.keyboard.helpers.LANGUAGE_VIETNAMESE_TELEX
 import org.fossify.keyboard.helpers.cachedVNTelexData
 import org.fossify.keyboard.interfaces.OnKeyboardActionListener
 import org.fossify.keyboard.views.MyKeyboardView
@@ -153,12 +159,16 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     private var enterKeyType = IME_ACTION_NONE
     private var switchToLetters = false
     private var breakIterator: BreakIterator? = null
+    private val composingWord = StringBuilder()
+    private var currentSuggestions = listOf<String>()
+    private var isQuickActionsExpanded = false
 
     private lateinit var binding: KeyboardViewKeyboardBinding
 
     override fun onInitializeInterface() {
         super.onInitializeInterface()
         safeStorageContext.getSharedPrefs().registerOnSharedPreferenceChangeListener(this)
+        SuggestionEngine.init(this)
     }
 
     override fun onCreateInputView(): View {
@@ -170,6 +180,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             setupEdgeToEdge()
             mOnKeyboardActionListener = this@SimpleKeyboardIME
         }
+        setupSuggestions()
 
         return binding.root
     }
@@ -190,6 +201,10 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+        composingWord.clear()
+        isQuickActionsExpanded = false
+        hideSuggestions()
+        updateToolbarState()
         inputTypeClass = attribute!!.inputType and TYPE_MASK_CLASS
         inputTypeClassVariation = attribute.inputType and TYPE_MASK_VARIATION
         enterKeyType = attribute.imeOptions and (IME_MASK_ACTION or IME_FLAG_NO_ENTER_ACTION)
@@ -203,21 +218,26 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     }
 
     private fun updateShiftKeyState() {
-        if (keyboard?.mShiftState == ShiftState.ON_PERMANENT) {
+        val currentKeyboard = keyboard ?: return
+        if (currentKeyboard.mShiftState == ShiftState.ON_PERMANENT) {
             return
         }
 
         val editorInfo = currentInputEditorInfo
-        if (config.enableSentencesCapitalization && editorInfo != null && editorInfo.inputType != TYPE_NULL) {
+        val targetShiftState = if (config.enableSentencesCapitalization && editorInfo != null && editorInfo.inputType != TYPE_NULL) {
             if (currentInputConnection.getCursorCapsMode(editorInfo.inputType) != 0) {
-                keyboard?.setShifted(ShiftState.ON_ONE_CHAR)
-                keyboardView?.invalidateAllKeys()
-                return
+                ShiftState.ON_ONE_CHAR
+            } else {
+                ShiftState.OFF
             }
+        } else {
+            ShiftState.OFF
         }
 
-        keyboard?.setShifted(ShiftState.OFF)
-        keyboardView?.invalidateAllKeys()
+        if (currentKeyboard.mShiftState != targetShiftState) {
+            currentKeyboard.setShifted(targetShiftState)
+            keyboardView?.invalidateAllKeys()
+        }
     }
 
     @RequiresApi(Build.VERSION_CODES.R)
@@ -259,6 +279,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
         if (code != MyKeyboard.KEYCODE_SHIFT) {
             lastShiftPressTS = 0
+            collapseQuickActions()
         }
 
         when (code) {
@@ -269,6 +290,17 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                     inputConnection.deleteSurroundingText(count, 0)
                 } else {
                     inputConnection.commitText("", 1)
+                }
+
+                if (composingWord.isNotEmpty()) {
+                    composingWord.deleteCharAt(composingWord.length - 1)
+                    if (composingWord.isNotEmpty()) {
+                        showSuggestions(SuggestionEngine.getSuggestions(composingWord.toString()))
+                    } else {
+                        hideSuggestions()
+                    }
+                } else {
+                    hideSuggestions()
                 }
             }
 
@@ -297,6 +329,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_ENTER -> {
+                if (composingWord.isNotEmpty()) {
+                    SuggestionEngine.learnWord(this, composingWord.toString())
+                    composingWord.clear()
+                    hideSuggestions()
+                }
+
                 val imeOptionsActionId = getImeOptionsActionId()
                 if (imeOptionsActionId != IME_ACTION_NONE) {
                     inputConnection.performEditorAction(imeOptionsActionId)
@@ -307,6 +345,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_SYMBOLS_MODE_CHANGE -> {
+                if (composingWord.isNotEmpty()) {
+                    SuggestionEngine.learnWord(this, composingWord.toString())
+                    composingWord.clear()
+                    hideSuggestions()
+                }
+
                 val keyboardXML = if (keyboardMode == KEYBOARD_SYMBOLS || keyboardMode == KEYBOARD_SYMBOLS_SHIFT) {
                     keyboardMode = KEYBOARD_SYMBOLS_ALT
                     R.xml.keys_symbols_alt
@@ -320,6 +364,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_MODE_CHANGE -> {
+                if (composingWord.isNotEmpty()) {
+                    SuggestionEngine.learnWord(this, composingWord.toString())
+                    composingWord.clear()
+                    hideSuggestions()
+                }
+
                 val keyboardXml = if (keyboardMode == KEYBOARD_LETTERS) {
                     keyboardMode = KEYBOARD_SYMBOLS
                     R.xml.keys_symbols
@@ -333,6 +383,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_EMOJI_OR_LANGUAGE -> {
+                if (composingWord.isNotEmpty()) {
+                    SuggestionEngine.learnWord(this, composingWord.toString())
+                    composingWord.clear()
+                    hideSuggestions()
+                }
+
                 if (config.showEmojiKey) {
                     keyboardView?.openEmojiPalette()
                 } else if (config.showLanguageSwitchKey) {
@@ -346,16 +402,29 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                 }
             }
 
-            MyKeyboard.KEYCODE_POPUP_EMOJI -> keyboardView?.openEmojiPalette()
-            MyKeyboard.KEYCODE_POPUP_SETTINGS -> Intent(this, SettingsActivity::class.java)
-                .apply {
+            MyKeyboard.KEYCODE_POPUP_EMOJI -> {
+                if (composingWord.isNotEmpty()) {
+                    SuggestionEngine.learnWord(this, composingWord.toString())
+                    composingWord.clear()
+                    hideSuggestions()
+                }
+                keyboardView?.openEmojiPalette()
+            }
+
+            MyKeyboard.KEYCODE_POPUP_SETTINGS -> {
+                if (composingWord.isNotEmpty()) {
+                    SuggestionEngine.learnWord(this, composingWord.toString())
+                    composingWord.clear()
+                    hideSuggestions()
+                }
+                Intent(this, SettingsActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     startActivity(this)
                 }
+            }
 
             else -> {
                 var codeChar = code.toChar()
-                val originalText = inputConnection.getExtractedText(ExtractedTextRequest(), 0)?.text
 
                 if (Character.isLetter(codeChar) && keyboard!!.mShiftState > ShiftState.OFF) {
                     if (baseContext.config.keyboardLanguage == LANGUAGE_TURKISH_Q) {
@@ -365,18 +434,40 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                     }
                 }
 
-                // If the keyboard is set to symbols and the user presses space, we usually should switch back to the letters keyboard.
-                // However, avoid doing that in cases when the EditText for example requires numbers as the input.
-                // We can detect that by the text not changing on pressing Space.
+                // If the keyboard is set to symbols and the user presses space, switch back to the letters keyboard.
                 if (keyboardMode != KEYBOARD_LETTERS && inputTypeClass == TYPE_CLASS_TEXT && code == MyKeyboard.KEYCODE_SPACE) {
-                    inputConnection.commitText(codeChar.toString(), 1)
-                    val newText = inputConnection.getExtractedText(ExtractedTextRequest(), 0)?.text
-                    if (originalText != newText) {
-                        switchToLetters = keyboardMode != KEYBOARD_SYMBOLS_ALT
+                    if (composingWord.isNotEmpty()) {
+                        SuggestionEngine.learnWord(this, composingWord.toString())
+                        composingWord.clear()
+                        hideSuggestions()
                     }
+                    inputConnection.commitText(codeChar.toString(), 1)
+                    switchToLetters = keyboardMode != KEYBOARD_SYMBOLS_ALT
                 } else {
-                    when {
-                        !originalText.isNullOrEmpty() && cachedVNTelexData.isNotEmpty() -> {
+                    if (code == MyKeyboard.KEYCODE_SPACE) {
+                        if (composingWord.isNotEmpty()) {
+                            SuggestionEngine.learnWord(this, composingWord.toString())
+                            composingWord.clear()
+                            hideSuggestions()
+                        }
+                    } else if (Character.isLetter(codeChar) || (composingWord.isNotEmpty() && (codeChar == '\'' || codeChar == '-'))) {
+                        collapseQuickActions()
+                        composingWord.append(codeChar)
+                        showSuggestions(SuggestionEngine.getSuggestions(composingWord.toString()))
+                    } else {
+                        if (composingWord.isNotEmpty()) {
+                            SuggestionEngine.learnWord(this, composingWord.toString())
+                            composingWord.clear()
+                            hideSuggestions()
+                        }
+                    }
+
+                    val currentLang = baseContext.config.keyboardLanguage
+                    val isVNTelexActive = currentLang == LANGUAGE_VIETNAMESE_TELEX && cachedVNTelexData.isNotEmpty()
+
+                    if (isVNTelexActive) {
+                        val originalText = inputConnection.getExtractedText(ExtractedTextRequest(), 0)?.text
+                        if (!originalText.isNullOrEmpty()) {
                             val fullText = originalText.toString() + codeChar.toString()
                             val lastIndexEmpty = if (fullText.contains(" ")) {
                                 fullText.lastIndexOf(" ")
@@ -395,16 +486,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                                         return
                                     }
                                 }
-                                inputConnection.commitText(codeChar.toString(), 1)
-                                updateShiftKeyState()
                             }
                         }
-
-                        else -> {
-                            inputConnection.commitText(codeChar.toString(), 1)
-                            updateShiftKeyState()
-                        }
                     }
+
+                    inputConnection.commitText(codeChar.toString(), 1)
+                    updateShiftKeyState()
                 }
             }
         }
@@ -506,6 +593,14 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             keyboardView?.closeClipboardManager()
         }
         updateShiftKeyState()
+
+        if (composingWord.isNotEmpty() && (newSelStart != newSelEnd || oldSelStart != newSelStart)) {
+            val textBefore = currentInputConnection?.getTextBeforeCursor(composingWord.length, 0)?.toString()
+            if (textBefore != composingWord.toString()) {
+                composingWord.clear()
+                hideSuggestions()
+            }
+        }
     }
 
     override fun onUpdateCursorAnchorInfo(cursorAnchorInfo: CursorAnchorInfo?) {
@@ -667,7 +762,134 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         val backgroundColor = safeStorageContext.getKeyboardBackgroundColor()
         binding.keyboardHolder.setBackgroundColor(backgroundColor)
         window.window?.setSystemBarsAppearance(backgroundColor)
+
+        val textColor = getProperTextColor()
+        val primaryColor = getProperPrimaryColor()
+        binding.toolbarExpandButton.setColorFilter(textColor)
+        binding.suggestionLeft.setTextColor(textColor)
+        binding.suggestionCenter.setTextColor(primaryColor)
+        binding.suggestionRight.setTextColor(textColor)
+        binding.suggestionDivider1.setBackgroundColor(textColor)
+        binding.suggestionDivider2.setBackgroundColor(textColor)
     }
+
+    private fun setupSuggestions() {
+        binding.toolbarExpandButton.setOnClickListener {
+            toggleQuickActions()
+        }
+        binding.suggestionLeft.setOnClickListener {
+            onSuggestionClicked(0)
+        }
+        binding.suggestionCenter.setOnClickListener {
+            onSuggestionClicked(1)
+        }
+        binding.suggestionRight.setOnClickListener {
+            onSuggestionClicked(2)
+        }
+    }
+
+    private fun toggleQuickActions() {
+        isQuickActionsExpanded = !isQuickActionsExpanded
+        updateToolbarState()
+    }
+
+    private fun collapseQuickActions() {
+        if (isQuickActionsExpanded) {
+            isQuickActionsExpanded = false
+            updateToolbarState()
+        }
+    }
+
+    private fun updateToolbarState() {
+        if (!::binding.isInitialized) return
+        if (isQuickActionsExpanded) {
+            binding.toolbarExpandButton.setImageResource(R.drawable.ic_chevron_left_vector)
+            binding.toolbarExpandButton.contentDescription = getString(R.string.collapse_actions)
+            binding.wordSuggestionsHolder.beGone()
+            binding.toolbarQuickActionsHolder.beVisible()
+        } else {
+            binding.toolbarExpandButton.setImageResource(R.drawable.ic_chevron_right_vector)
+            binding.toolbarExpandButton.contentDescription = getString(R.string.expand_actions)
+            binding.toolbarQuickActionsHolder.beGone()
+            binding.wordSuggestionsHolder.beVisible()
+        }
+    }
+
+    private fun onSuggestionClicked(index: Int) {
+        val word = currentSuggestions.getOrNull(index) ?: return
+        if (word.isEmpty()) return
+
+        val inputConnection = currentInputConnection ?: return
+        val lengthToDelete = composingWord.length
+        if (lengthToDelete > 0) {
+            inputConnection.deleteSurroundingText(lengthToDelete, 0)
+        }
+        inputConnection.commitText("$word ", 1)
+        SuggestionEngine.learnWord(this, word)
+        composingWord.clear()
+        hideSuggestions()
+        updateShiftKeyState()
+        keyboardView?.performKeypressFeedback(MyKeyboard.KEYCODE_SPACE)
+    }
+
+    private fun showSuggestions(suggestions: List<String>) {
+        if (suggestions.isEmpty() || suggestions.all { it.isEmpty() }) {
+            hideSuggestions()
+            return
+        }
+
+        currentSuggestions = suggestions
+        val s0 = suggestions.getOrNull(0) ?: ""
+        val s1 = suggestions.getOrNull(1) ?: ""
+        val s2 = suggestions.getOrNull(2) ?: ""
+
+        binding.suggestionLeft.text = s0
+        binding.suggestionCenter.text = s1
+        binding.suggestionRight.text = s2
+
+        binding.suggestionLeft.beVisibleIf(s0.isNotEmpty())
+        binding.suggestionDivider1.beVisibleIf(s0.isNotEmpty() && s1.isNotEmpty())
+        binding.suggestionCenter.beVisibleIf(s1.isNotEmpty())
+        binding.suggestionDivider2.beVisibleIf(s1.isNotEmpty() && s2.isNotEmpty())
+        binding.suggestionRight.beVisibleIf(s2.isNotEmpty())
+
+        if (!isQuickActionsExpanded) {
+            binding.wordSuggestionsHolder.beVisible()
+            binding.toolbarQuickActionsHolder.beGone()
+            binding.toolbarExpandButton.setImageResource(R.drawable.ic_chevron_right_vector)
+            binding.toolbarExpandButton.contentDescription = getString(R.string.expand_actions)
+        }
+    }
+
+    private fun hideSuggestions() {
+        currentSuggestions = emptyList()
+        if (::binding.isInitialized) {
+            binding.suggestionLeft.text = ""
+            binding.suggestionCenter.text = ""
+            binding.suggestionRight.text = ""
+            binding.suggestionLeft.beGone()
+            binding.suggestionDivider1.beGone()
+            binding.suggestionCenter.beGone()
+            binding.suggestionDivider2.beGone()
+            binding.suggestionRight.beGone()
+            if (!isQuickActionsExpanded) {
+                binding.wordSuggestionsHolder.beVisible()
+                binding.toolbarQuickActionsHolder.beGone()
+                binding.toolbarExpandButton.setImageResource(R.drawable.ic_chevron_right_vector)
+                binding.toolbarExpandButton.contentDescription = getString(R.string.expand_actions)
+            }
+        }
+    }
+
+    override fun onFinishInputView(finishingInput: Boolean) {
+        super.onFinishInputView(finishingInput)
+        if (composingWord.isNotEmpty()) {
+            SuggestionEngine.learnWord(this, composingWord.toString())
+            composingWord.clear()
+            hideSuggestions()
+        }
+    }
+
 
     private fun Bitmap.toIcon(): Icon {
         val byteArray: ByteArray = ByteArrayOutputStream().let { outputStream ->

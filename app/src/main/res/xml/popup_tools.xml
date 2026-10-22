@@ -2,6 +2,8 @@
 <Keyboard xmlns:app="http://schemas.android.com/apk/res-auto">
     <Row>
         <Key
+            app:keyLabel="," />
+        <Key
             app:code="-8"
             app:keyIcon="@drawable/ic_settings_cog_vector" />
     </Row>

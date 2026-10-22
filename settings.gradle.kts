@@ -14,4 +14,5 @@ dependencyResolutionManagement {
         mavenLocal()
     }
 }
+rootProject.name = "Keyboard"
 include(":app")
