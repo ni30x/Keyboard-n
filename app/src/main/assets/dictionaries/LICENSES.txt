@@ -1,0 +1,23 @@
+SCOWL (Spell Checking Oriented Word Lists)
+-------------------------------------------
+Copyright 2000-2016 by Kevin Atkinson
+
+Permission to use, copy, modify, distribute and sell this software, the
+associated documentation and the accompanying word lists for any purpose is
+hereby granted without fee, provided that this copyright notice appears in
+all copies and that both that copyright notice and this permission notice
+appear in supporting documentation. Kevin Atkinson makes no representations
+about the suitability of this software for any purpose. It is provided
+"as is" without express or implied warranty.
+
+12Dicts Word Lists by Alan Beale
+--------------------------------
+The 12Dicts package is placed into the public domain by its author, Alan Beale.
+No copyright is claimed.
+
+Google Web Trillion Word Frequency Corpus (Compiled by Peter Norvig)
+--------------------------------------------------------------------
+Word frequency data derived from the Google Web Trillion Word Corpus,
+processed and made available by Peter Norvig (http://norvig.com/ngrams/).
+Licensed under the Creative Commons Attribution 3.0 Unported License (CC-BY 3.0)
+or public domain dedication where applicable.

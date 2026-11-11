@@ -1,6 +1,6 @@
 {
-  "summary":  "Implementation plan to adjust keyboard sizing, row spacing, key corner rounding, bottom row geometry, and action key styling to exactly match Gboard specifications.",
-  "updatedAt":  "2026-10-22T10:36:44.467095687Z",
-  "requestFeedback":  true,
-  "userFacing":  true
+  "summary": "Pixel-perfect layout calibration matching Gboard exactly based on screenshot measurements:\n- Toolbar Height: 44dp\n- Top Padding: 10dp\n- Key Height: 47dp\n- Row Gap: 12dp\n- Row Pitch: 59dp\n- Keys Area Height: 224dp\n- Gap below Row 4: 12dp\n- Keyboard View Height: 246dp\n- Total Keyboard Height (with 48dp system navigation insets): 338dp (888px on 1080x2400)\n- Top of Keyboard Y-position: Y = 1512 matching Gboard exact Y = 1512",
+  "updatedAt": "2026-11-06T17:07:15.034825828Z",
+  "requestFeedback": true,
+  "userFacing": true
 }

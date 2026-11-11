@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="44dp"
+    android:layout_margin="1dp">
+
+    <LinearLayout
+        android:id="@+id/day_container"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/day_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="13sp"
+            android:textStyle="normal" />
+
+        <View
+            android:id="@+id/day_dot"
+            android:layout_width="5dp"
+            android:layout_height="5dp"
+            android:layout_marginTop="2dp"
+            android:background="@drawable/calendar_dot_indicator"
+            android:visibility="invisible" />
+
+    </LinearLayout>
+
+</FrameLayout>

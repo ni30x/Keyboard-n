@@ -1,55 +1,22 @@
-# Gboard-Matched Keyboard Sizing, Geometry & Styling Implementation Plan
+# Gboard Layout Geometry Calibration
 
-## User Review & Clarified Preferences
+Calibrate the keyboard's vertical key height, row pitch, vertical gaps, toolbar alignment, and total container height so that key sizing and row spacing match Gboard (portrait, default height) with pixel-perfect precision based on device screenshot measurements.
 
-> [!IMPORTANT]
-> Based on your measurements and answers:
-> - **Key Corner Radius**: Matching Gboard's softer rounded corners (~20–24px / 8–9dp) on letter keys, and **full stadium/pill shapes** on the `?123` mode change key and `Enter`/action key.
-> - **Key Height & Row Spacing**: Exact Gboard proportions—reducing key height by ~7.5% (from 60dp to 55dp, giving ~132px top row and ~126px spacebar/enter) and reducing vertical row gap to 10px (~5dp total gap between rows).
-> - **Bottom Row Geometry**: Replacing the standalone comma key left of the spacebar with `@` (with comma available in popup/long-press), and displaying the tab/next (`->|`) icon on the enter key when next action is active.
+## Measured Gboard Geometry (1080x2400 Display, Scale = 2.625)
 
----
-
-## Proposed Changes
-
-### 1. Key Dimensions & Row Spacing (`dimens.xml` & Key Drawables)
-- Update `R.dimen.key_height` in `app/src/main/res/values/dimens.xml`:
-  - Adjust base height from `60dp` to `55dp` (~132px on 1080p scale), matching Gboard's ~7.5% more compact key profile.
-- Introduce dedicated keyboard dimension tokens:
-  - `key_corner_radius`: `8.5dp` (~22px, matching Gboard's 20–24px soft rounded corners).
-  - `key_pill_corner_radius`: `24dp` (or `999dp` full stadium pill shape for `?123` and `Enter`).
-  - `key_vertical_margin`: `2.5dp` (top `2.5dp`, bottom `2.5dp` for a total 5dp / ~10px inter-row vertical spacing, down from 14px).
-  - `key_horizontal_margin`: `2.5dp` (for balanced horizontal key separation).
-
-### 2. Pill/Stadium Shape for `?123` and Enter Keys (`drawables` & `MyKeyboardView.kt`)
-- Create `keyboard_pill_key_background.xml` and `keyboard_pill_key_background_outlined.xml` with full stadium/pill shape (`corners radius="24dp"`).
-- Update `keyboard_enter_background.xml` and `keyboard_enter_background_outlined.xml` to use the full stadium pill geometry.
-- In `MyKeyboardView.kt`:
-  - Enhance `setupKeyBackground(key, keyCode, canvas)`:
-    - Route `KEYCODE_MODE_CHANGE` (`?123`) to use the pill background drawable with function key tinting.
-    - Route `KEYCODE_ENTER` to use the enter pill background drawable with primary accent tinting.
-  - Update `mKeyBackground` and pressed backgrounds to use `key_corner_radius` (8.5dp) for all letter and standard keys.
-
-### 3. Bottom Row `@` Key & Tab/Next Action Icon
-- In `app/src/main/res/xml/keys_letters_english_qwerty.xml`:
-  - Update the key immediately to the left of the spacebar:
-    - Change primary label from `,` to `@` (with `,` and tools available on popup/long press), matching Gboard's bottom row layout.
-- Create vector drawable `ic_tab_next_vector.xml`:
-  - High-precision Gboard-style Tab / Next arrow pointing to a vertical bar (`->|`).
-- In `app/src/main/kotlin/org/fossify/keyboard/helpers/MyKeyboard.kt`:
-  - When `key.code == KEYCODE_ENTER` and `mEnterKeyType` is `EditorInfo.IME_ACTION_NEXT`, assign `ic_tab_next_vector`.
-
----
-
-## Verification Plan
-
-### Automated Build & Unit Tests
-- Execute `compile_applet` to ensure zero compilation or resource errors across layouts and drawables.
-- Run unit tests via `gradle :app:testDebugUnitTest`.
-
-### Visual & Geometry Verification
-- Verify that standard keys display soft 8.5dp rounded corners.
-- Verify that both `?123` and `Enter` render as smooth full pills/stadiums.
-- Verify that the vertical gap between key rows measures 10px (~5dp).
-- Verify that the `@` key renders to the left of the spacebar.
-- Verify that `IME_ACTION_NEXT` correctly renders the `->|` tab icon on the Enter key.
+| Metric | Measured Gboard (px) | Equivalent (dp) | Implementation in Code |
+| :--- | :--- | :--- | :--- |
+| **Top of Toolbar (Y-coordinate)** | `Y = 1512` | — | Top border of keyboard surface |
+| **Toolbar Height (`toolbar_height`)** | `116px` | `44dp` | `@dimen/toolbar_height` = `44dp` |
+| **Top Padding Above Row 1** | `26px` | `10dp` | `@dimen/keyboard_top_padding` = `10dp` |
+| **Row 1 Top (Y-coordinate)** | `Y = 1654` | — | `1512 + 116 + 26 = 1654px` (exact) |
+| **Key Height (`key_height`)** | `123px` | `47dp` | `@dimen/key_height` = `47dp` |
+| **Vertical Row Gap (`row_gap`)** | `32px` | `12dp` | `@dimen/row_gap` = `12dp` |
+| **Row Pitch (`row_pitch`)** | `155px` | `59dp` | `47dp + 12dp = 59dp` ($155 / 2.625 = 59.04\text{dp}$) |
+| **Keys Area Height (Row 1 to Row 4)** | `588px` | `224dp` | $4 \times 47\text{dp} + 3 \times 12\text{dp} = 224\text{dp}$ |
+| **Gap Below Row 4** | `32px` | `12dp` | `@dimen/gap_below_row4` = `12dp` |
+| **Keyboard View Height** | `646px` | `246dp` | `10dp + 224dp + 12dp = 246dp` |
+| **System Navigation Bar / Insets** | `126px` | `48dp` | `WindowInsets.Type.systemBars().bottom` |
+| **Total Keyboard + Inset Height** | `888px` | `338dp` | `44dp + 246dp + 48dp = 338dp` ($2400 - 888 = 1512$) |
+| **Corner Radius (Letter)** | `21px` | `8dp` | `@dimen/key_corner_radius` = `8dp` |
+| **Corner Radius (Pill: ?123, Enter)** | `62px` | `23.5dp` | `@dimen/key_pill_corner_radius` = `23.5dp` (`key_height / 2`) |

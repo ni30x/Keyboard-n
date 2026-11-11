@@ -1,39 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Keyboard xmlns:app="http://schemas.android.com/apk/res-auto">
-    <Row app:isNumbersRow="true">
-        <Key
-            app:keyEdgeFlags="left"
-            app:keyLabel="1"
-            app:topSmallNumber="1" />
-        <Key
-            app:keyLabel="2"
-            app:topSmallNumber="2" />
-        <Key
-            app:keyLabel="3"
-            app:topSmallNumber="3" />
-        <Key
-            app:keyLabel="4"
-            app:topSmallNumber="4" />
-        <Key
-            app:keyLabel="5"
-            app:topSmallNumber="5" />
-        <Key
-            app:keyLabel="6"
-            app:topSmallNumber="6" />
-        <Key
-            app:keyLabel="7"
-            app:topSmallNumber="7" />
-        <Key
-            app:keyLabel="8"
-            app:topSmallNumber="8" />
-        <Key
-            app:keyLabel="9"
-            app:topSmallNumber="9" />
-        <Key
-            app:keyEdgeFlags="right"
-            app:keyLabel="0"
-            app:topSmallNumber="0" />
-    </Row>
     <Row>
         <Key
             app:keyEdgeFlags="left"
@@ -48,12 +14,12 @@
             app:topSmallNumber="2" />
         <Key
             app:keyLabel="e"
-            app:popupCharacters="éè3êëēę"
+            app:popupCharacters="3éèêëēę"
             app:popupKeyboard="@xml/keyboard_popup_template"
             app:topSmallNumber="3" />
         <Key
             app:keyLabel="r"
-            app:popupCharacters="ř4ŕ"
+            app:popupCharacters="4řŕ"
             app:popupKeyboard="@xml/keyboard_popup_template"
             app:topSmallNumber="4" />
         <Key
@@ -63,22 +29,22 @@
             app:topSmallNumber="5" />
         <Key
             app:keyLabel="y"
-            app:popupCharacters="ý6ÿ¥"
+            app:popupCharacters="6ýÿ¥"
             app:popupKeyboard="@xml/keyboard_popup_template"
             app:topSmallNumber="6" />
         <Key
             app:keyLabel="u"
-            app:popupCharacters="űúùû7üūů"
+            app:popupCharacters="7űúùûüūů"
             app:popupKeyboard="@xml/keyboard_popup_template"
             app:topSmallNumber="7" />
         <Key
             app:keyLabel="i"
-            app:popupCharacters="íìîï8īį"
+            app:popupCharacters="8íìîïīį"
             app:popupKeyboard="@xml/keyboard_popup_template"
             app:topSmallNumber="8" />
         <Key
             app:keyLabel="o"
-            app:popupCharacters="őöøóôòõ9ō"
+            app:popupCharacters="9őöøóôòõō"
             app:popupKeyboard="@xml/keyboard_popup_template"
             app:topSmallNumber="9" />
         <Key

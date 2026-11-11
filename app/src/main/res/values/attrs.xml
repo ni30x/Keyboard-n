@@ -38,6 +38,8 @@
         <attr name="secondaryKeyIcon" format="reference" />
         <!-- Top small number shown above letters of the first row. -->
         <attr name="topSmallNumber" format="string" />
+        <!-- Sublabel shown next to primary label, e.g. "ABC" for "2". -->
+        <attr name="keySublabel" format="string" />
         <!-- Role identifier for special keys (e.g., "tools" for the tools popup host key). -->
         <attr name="keyRole" format="string" />
     </declare-styleable>

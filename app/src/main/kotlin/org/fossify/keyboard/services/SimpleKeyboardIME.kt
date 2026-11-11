@@ -1,8 +1,10 @@
 package org.fossify.keyboard.services
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.view.inputmethod.InputMethodManager
 import android.graphics.Bitmap
 import android.graphics.drawable.Icon
 import android.graphics.drawable.LayerDrawable
@@ -20,6 +22,7 @@ import android.text.InputType.TYPE_MASK_CLASS
 import android.text.InputType.TYPE_MASK_VARIATION
 import android.text.InputType.TYPE_NULL
 import android.text.TextUtils
+import android.util.Log
 import android.util.Size
 import android.view.KeyEvent
 import android.view.View
@@ -56,6 +59,9 @@ import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.getSharedPrefs
 import org.fossify.commons.extensions.setSystemBarsAppearance
+import org.fossify.keyboard.helpers.IhDebug
+import org.fossify.keyboard.helpers.InputHistoryRecordingEngine
+import org.fossify.keyboard.helpers.PredictiveTouchTargetEngine
 import org.fossify.keyboard.helpers.SuggestionEngine
 import org.fossify.commons.helpers.ACCENT_COLOR
 import org.fossify.commons.helpers.BACKGROUND_COLOR
@@ -122,6 +128,8 @@ import org.fossify.keyboard.helpers.LANGUAGE_SWEDISH
 import org.fossify.keyboard.helpers.LANGUAGE_TURKISH
 import org.fossify.keyboard.helpers.LANGUAGE_TURKISH_Q
 import org.fossify.keyboard.helpers.LANGUAGE_UKRAINIAN
+import org.fossify.keyboard.helpers.AUTO_SYNC_MATERIAL_YOU
+import org.fossify.keyboard.helpers.Material3Palette
 import org.fossify.keyboard.helpers.MyKeyboard
 import org.fossify.keyboard.helpers.SHOW_KEY_BORDERS
 import org.fossify.keyboard.helpers.SHOW_NUMBERS_ROW
@@ -160,8 +168,12 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     private var switchToLetters = false
     private var breakIterator: BreakIterator? = null
     private val composingWord = StringBuilder()
+    private var lastCommittedWord = ""
     private var currentSuggestions = listOf<String>()
     private var isQuickActionsExpanded = false
+
+    data class AutocorrectRecord(val typedWord: String, val correctedWord: String, val timestamp: Long)
+    private var lastAutocorrect: AutocorrectRecord? = null
 
     private lateinit var binding: KeyboardViewKeyboardBinding
 
@@ -171,46 +183,90 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         SuggestionEngine.init(this)
     }
 
+    private var cachedInputView: View? = null
+
     override fun onCreateInputView(): View {
+        if (cachedInputView != null && ::binding.isInitialized) {
+            return cachedInputView!!
+        }
         binding = KeyboardViewKeyboardBinding.inflate(layoutInflater)
+        binding.keyboardHolder.layoutParams = ViewGroup.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+        if (keyboard == null) {
+            keyboard = createNewKeyboard()
+        }
         keyboardView = binding.keyboardView.apply {
             setKeyboardHolder(binding)
             setKeyboard(keyboard!!)
-            setEditorInfo(currentInputEditorInfo)
+            if (currentInputEditorInfo != null) {
+                setEditorInfo(currentInputEditorInfo)
+            }
             setupEdgeToEdge()
             mOnKeyboardActionListener = this@SimpleKeyboardIME
         }
         setupSuggestions()
-
-        return binding.root
+        cachedInputView = binding.root
+        return cachedInputView!!
     }
 
     override fun onStartInputView(editorInfo: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(editorInfo, restarting)
         updateBackgroundColors()
+        keyboardView?.setupKeyboard()
         binding.keyboardHolder.post {
             ViewCompat.requestApplyInsets(binding.keyboardHolder)
         }
     }
 
-    override fun onPress(primaryCode: Int) {
-        if (primaryCode != 0) {
-            keyboardView?.performKeypressFeedback(primaryCode)
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        if (::binding.isInitialized) {
+            updateBackgroundColors()
+            keyboardView?.setupKeyboard()
         }
+    }
+
+    override fun onPress(primaryCode: Int) {
+        keyboardView?.hideClipboardPasteChip()
+    }
+
+    override fun isInputFieldEmpty(): Boolean {
+        val ic = currentInputConnection ?: return true
+        val before = ic.getTextBeforeCursor(1, 0)
+        val after = ic.getTextAfterCursor(1, 0)
+        return before.isNullOrEmpty() && after.isNullOrEmpty()
     }
 
     override fun onStartInput(attribute: EditorInfo?, restarting: Boolean) {
         super.onStartInput(attribute, restarting)
+        val pkg = attribute?.packageName ?: ""
+        val inputType = attribute?.inputType ?: TYPE_CLASS_TEXT
+        Log.d("IME_DEBUG", "onStartInput pkg=$pkg inputType=$inputType restarting=$restarting")
+        SuggestionEngine.onStartSession(pkg, inputType)
+        val ic = currentInputConnection
+        val initialText = if (ic != null) {
+            val before = ic.getTextBeforeCursor(2000, 0)?.toString() ?: ""
+            val after = ic.getTextAfterCursor(2000, 0)?.toString() ?: ""
+            before + after
+        } else null
+        InputHistoryRecordingEngine.onStartInput(this, attribute, initialText)
         composingWord.clear()
+        lastCommittedWord = ""
+        lastAutocorrect = null
         isQuickActionsExpanded = false
         hideSuggestions()
         updateToolbarState()
-        inputTypeClass = attribute!!.inputType and TYPE_MASK_CLASS
-        inputTypeClassVariation = attribute.inputType and TYPE_MASK_VARIATION
-        enterKeyType = attribute.imeOptions and (IME_MASK_ACTION or IME_FLAG_NO_ENTER_ACTION)
+        inputTypeClass = inputType and TYPE_MASK_CLASS
+        inputTypeClassVariation = inputType and TYPE_MASK_VARIATION
+        enterKeyType = (attribute?.imeOptions ?: 0) and (IME_MASK_ACTION or IME_FLAG_NO_ENTER_ACTION)
         keyboard = createNewKeyboard()
         keyboardView?.setKeyboard(keyboard!!)
-        keyboardView?.setEditorInfo(attribute)
+        if (attribute != null) {
+            keyboardView?.setEditorInfo(attribute)
+        }
+        updateToolbarVisibility()
         if (isNougatPlus()) {
             breakIterator = BreakIterator.getCharacterInstance(ULocale.getDefault())
         }
@@ -284,23 +340,67 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
         when (code) {
             MyKeyboard.KEYCODE_DELETE -> {
+                keyboardView?.hideClipboardPasteChip()
+
+                val autocorrect = lastAutocorrect
+                if (autocorrect != null && System.currentTimeMillis() - autocorrect.timestamp <= 2500L) {
+                    lastAutocorrect = null
+                    val toDelete = autocorrect.correctedWord.length + 1
+                    inputConnection.deleteSurroundingText(toDelete, 0)
+                    inputConnection.commitText(autocorrect.typedWord, 1)
+                    InputHistoryRecordingEngine.onReplaceBeforeCursor(this, toDelete, autocorrect.typedWord)
+                    SuggestionEngine.recordRejection(autocorrect.typedWord, autocorrect.correctedWord)
+                    composingWord.clear()
+                    composingWord.append(autocorrect.typedWord)
+                    SuggestionEngine.getSuggestionsAsync(autocorrect.typedWord, lastCommittedWord.ifEmpty { null }) { suggestions ->
+                        binding.root.post { showSuggestions(suggestions) }
+                    }
+                    return
+                }
+                lastAutocorrect = null
+
                 val selectedText = inputConnection.getSelectedText(0)
                 if (TextUtils.isEmpty(selectedText)) {
                     val count = getCountToDelete(inputConnection)
+                    // Allowed repair 3: Wire onWordDeleted for multi-character deletion (e.g. compound emoji/grapheme)
+                    if (count > 1) {
+                        InputHistoryRecordingEngine.onWordDeleted(this, count)
+                    } else {
+                        InputHistoryRecordingEngine.onBackspace(this)
+                    }
                     inputConnection.deleteSurroundingText(count, 0)
                 } else {
+                    IhDebug.logBypass("selected_text_delete", selectedText.length)
+                    InputHistoryRecordingEngine.onSelectionDeleted(this, selectedText.length)
                     inputConnection.commitText("", 1)
                 }
 
                 if (composingWord.isNotEmpty()) {
                     composingWord.deleteCharAt(composingWord.length - 1)
                     if (composingWord.isNotEmpty()) {
-                        showSuggestions(SuggestionEngine.getSuggestions(composingWord.toString()))
+                        val query = composingWord.toString()
+                        SuggestionEngine.getSuggestionsAsync(query, lastCommittedWord.ifEmpty { null }) { suggestions ->
+                            binding.root.post { showSuggestions(suggestions) }
+                        }
                     } else {
                         hideSuggestions()
                     }
                 } else {
-                    hideSuggestions()
+                    val textBefore = inputConnection.getTextBeforeCursor(30, 0)?.toString()?.trim()
+                    val lastWord = textBefore?.split("\\s+".toRegex())?.lastOrNull() ?: ""
+                    if (lastWord.isNotEmpty()) {
+                        SuggestionEngine.getNextWordPredictionsAsync(lastWord, null) { nextWords ->
+                            binding.root.post {
+                                if (nextWords.isNotEmpty()) {
+                                    showSuggestions(nextWords)
+                                } else {
+                                    hideSuggestions()
+                                }
+                            }
+                        }
+                    } else {
+                        hideSuggestions()
+                    }
                 }
             }
 
@@ -329,10 +429,16 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             }
 
             MyKeyboard.KEYCODE_ENTER -> {
+                keyboardView?.hideClipboardPasteChip()
+                InputHistoryRecordingEngine.onActionOrEnter(this, inputConnection, currentInputEditorInfo)
                 if (composingWord.isNotEmpty()) {
                     SuggestionEngine.learnWord(this, composingWord.toString())
+                    SuggestionEngine.recordWordTransition(lastCommittedWord, composingWord.toString())
+                    lastCommittedWord = composingWord.toString()
                     composingWord.clear()
                     hideSuggestions()
+                } else {
+                    lastCommittedWord = ""
                 }
 
                 val imeOptionsActionId = getImeOptionsActionId()
@@ -352,8 +458,8 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                 }
 
                 val keyboardXML = if (keyboardMode == KEYBOARD_SYMBOLS || keyboardMode == KEYBOARD_SYMBOLS_SHIFT) {
-                    keyboardMode = KEYBOARD_SYMBOLS_ALT
-                    R.xml.keys_symbols_alt
+                    keyboardMode = KEYBOARD_NUMBERS
+                    R.xml.keys_numbers
                 } else {
                     keyboardMode = KEYBOARD_SYMBOLS
                     R.xml.keys_symbols
@@ -361,6 +467,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
                 keyboard = constructKeyboard(keyboardXML, enterKeyType)
                 keyboardView!!.setKeyboard(keyboard!!)
+                updateToolbarVisibility()
             }
 
             MyKeyboard.KEYCODE_MODE_CHANGE -> {
@@ -380,6 +487,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
                 keyboard = constructKeyboard(keyboardXml, enterKeyType)
                 keyboardView!!.setKeyboard(keyboard!!)
+                updateToolbarVisibility()
             }
 
             MyKeyboard.KEYCODE_EMOJI_OR_LANGUAGE -> {
@@ -436,27 +544,88 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
                 // If the keyboard is set to symbols and the user presses space, switch back to the letters keyboard.
                 if (keyboardMode != KEYBOARD_LETTERS && inputTypeClass == TYPE_CLASS_TEXT && code == MyKeyboard.KEYCODE_SPACE) {
+                    Log.d("IME_DEBUG", "Space pressed in symbol mode")
+                    keyboardView?.hideClipboardPasteChip()
                     if (composingWord.isNotEmpty()) {
-                        SuggestionEngine.learnWord(this, composingWord.toString())
-                        composingWord.clear()
-                        hideSuggestions()
+                        handleSpaceAutoCorrection(inputConnection)
+                    } else {
+                        InputHistoryRecordingEngine.onKeystroke(' ')
+                        lastAutocorrect = null
+                        inputConnection.commitText(codeChar.toString(), 1)
+                        val textBefore = inputConnection.getTextBeforeCursor(30, 0)?.toString()?.trim()
+                        val lastWord = textBefore?.split("\\s+".toRegex())?.lastOrNull() ?: ""
+                        if (lastWord.isNotEmpty()) {
+                            SuggestionEngine.getNextWordPredictionsAsync(lastWord, null) { nextWords ->
+                                binding.root.post {
+                                    if (nextWords.isNotEmpty()) {
+                                        showSuggestions(nextWords)
+                                    } else {
+                                        hideSuggestions()
+                                    }
+                                }
+                            }
+                        }
                     }
-                    inputConnection.commitText(codeChar.toString(), 1)
                     switchToLetters = keyboardMode != KEYBOARD_SYMBOLS_ALT
+                    updateShiftKeyState()
+                    return
                 } else {
                     if (code == MyKeyboard.KEYCODE_SPACE) {
+                        Log.d("IME_DEBUG", "Space pressed, composingWord='$composingWord'")
+                        keyboardView?.hideClipboardPasteChip()
                         if (composingWord.isNotEmpty()) {
-                            SuggestionEngine.learnWord(this, composingWord.toString())
-                            composingWord.clear()
-                            hideSuggestions()
+                            handleSpaceAutoCorrection(inputConnection)
+                        } else {
+                            lastAutocorrect = null
+                            if (baseContext.config.doubleSpacePeriod) {
+                                val textBefore = inputConnection.getTextBeforeCursor(2, 0)?.toString()
+                                if (textBefore == "  ") {
+                                    inputConnection.deleteSurroundingText(2, 0)
+                                    inputConnection.commitText(". ", 1)
+                                    InputHistoryRecordingEngine.onReplaceBeforeCursor(this, 1, ". ")
+                                    lastCommittedWord = ""
+                                    hideSuggestions()
+                                    updateShiftKeyState()
+                                    return
+                                }
+                            }
+
+                            InputHistoryRecordingEngine.onKeystroke(' ')
+                            inputConnection.commitText(codeChar.toString(), 1)
+                            val textBefore = inputConnection.getTextBeforeCursor(30, 0)?.toString()?.trim()
+                            val lastWord = textBefore?.split("\\s+".toRegex())?.lastOrNull() ?: ""
+                            if (lastWord.isNotEmpty()) {
+                                SuggestionEngine.getNextWordPredictionsAsync(lastWord, null) { nextWords ->
+                                    binding.root.post {
+                                        if (nextWords.isNotEmpty()) {
+                                            showSuggestions(nextWords)
+                                        } else {
+                                            hideSuggestions()
+                                        }
+                                    }
+                                }
+                            }
                         }
+                        updateShiftKeyState()
+                        return
                     } else if (Character.isLetter(codeChar) || (composingWord.isNotEmpty() && (codeChar == '\'' || codeChar == '-'))) {
+                        lastAutocorrect = null
+                        keyboardView?.hideClipboardPasteChip()
                         collapseQuickActions()
                         composingWord.append(codeChar)
-                        showSuggestions(SuggestionEngine.getSuggestions(composingWord.toString()))
+                        val query = composingWord.toString()
+                        Log.d("IME_DEBUG", "Letter typed: '$codeChar', new composingWord='$query'")
+                        SuggestionEngine.getSuggestionsAsync(query, lastCommittedWord.ifEmpty { null }) { suggestions ->
+                            Log.d("IME_DEBUG", "Suggestions received for '$query': $suggestions")
+                            binding.root.post { showSuggestions(suggestions) }
+                        }
                     } else {
+                        lastAutocorrect = null
+                        keyboardView?.hideClipboardPasteChip()
                         if (composingWord.isNotEmpty()) {
                             SuggestionEngine.learnWord(this, composingWord.toString())
+                            SuggestionEngine.recordWordTransition(lastCommittedWord, composingWord.toString())
+                            lastCommittedWord = composingWord.toString()
                             composingWord.clear()
                             hideSuggestions()
                         }
@@ -480,9 +649,11 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                                     predictWord.append(wordChars[char])
                                     val shouldChangeText = predictWord.reverse().toString()
                                     if (cachedVNTelexData.containsKey(shouldChangeText)) {
+                                        val replacement = cachedVNTelexData[shouldChangeText] ?: ""
                                         inputConnection.setComposingRegion(fullText.length - shouldChangeText.length, fullText.length)
-                                        inputConnection.setComposingText(cachedVNTelexData[shouldChangeText], fullText.length)
+                                        inputConnection.setComposingText(replacement, fullText.length)
                                         inputConnection.setComposingRegion(fullText.length, fullText.length)
+                                        InputHistoryRecordingEngine.onReplaceBeforeCursor(this, shouldChangeText.length - 1, replacement)
                                         return
                                     }
                                 }
@@ -490,7 +661,14 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
                         }
                     }
 
-                    inputConnection.commitText(codeChar.toString(), 1)
+                    val selected = inputConnection.getSelectedText(0)
+                    if (!TextUtils.isEmpty(selected)) {
+                        inputConnection.commitText(codeChar.toString(), 1)
+                        InputHistoryRecordingEngine.onSelectionReplaced(this, selected.length, codeChar.toString())
+                    } else {
+                        inputConnection.commitText(codeChar.toString(), 1)
+                        InputHistoryRecordingEngine.onKeystroke(codeChar)
+                    }
                     updateShiftKeyState()
                 }
             }
@@ -545,6 +723,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     }
 
     override fun onText(text: String) {
+        InputHistoryRecordingEngine.onKeystroke(text)
         currentInputConnection?.commitText(text, 1)
     }
 
@@ -552,6 +731,16 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         val keyboard = createNewKeyboard()
         this.keyboard = keyboard
         keyboardView?.setKeyboard(keyboard)
+        updateToolbarVisibility()
+    }
+
+    private fun updateToolbarVisibility() {
+        if (!::binding.isInitialized) return
+        if (keyboardMode == KEYBOARD_NUMBERS || keyboardMode == KEYBOARD_PHONE) {
+            binding.toolbarHolder.beGone()
+        } else {
+            binding.toolbarHolder.beVisible()
+        }
     }
 
     override fun changeInputMethod(id: String, subtype: InputMethodSubtype) {
@@ -589,10 +778,13 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
     override fun onUpdateSelection(oldSelStart: Int, oldSelEnd: Int, newSelStart: Int, newSelEnd: Int, candidatesStart: Int, candidatesEnd: Int) {
         super.onUpdateSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
+        IhDebug.logSelection(oldSelStart, oldSelEnd, newSelStart, newSelEnd, candidatesStart, candidatesEnd)
         if (newSelStart == newSelEnd) {
             keyboardView?.closeClipboardManager()
         }
         updateShiftKeyState()
+        InputHistoryRecordingEngine.onCursorMoved(newSelStart)
+        InputHistoryRecordingEngine.onFieldOrSelectionUpdated(this, currentInputConnection)
 
         if (composingWord.isNotEmpty() && (newSelStart != newSelEnd || oldSelStart != newSelStart)) {
             val textBefore = currentInputConnection?.getTextBeforeCursor(composingWord.length, 0)?.toString()
@@ -737,7 +929,8 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         if (key != null && key in arrayOf(
                 SHOW_KEY_BORDERS, KEYBOARD_LANGUAGE, HEIGHT_PERCENTAGE, SHOW_NUMBERS_ROW, VOICE_INPUT_METHOD,
                 TEXT_COLOR, BACKGROUND_COLOR, PRIMARY_COLOR, ACCENT_COLOR, CUSTOM_TEXT_COLOR, CUSTOM_BACKGROUND_COLOR,
-                CUSTOM_PRIMARY_COLOR, CUSTOM_ACCENT_COLOR, IS_GLOBAL_THEME_ENABLED, IS_SYSTEM_THEME_ENABLED
+                CUSTOM_PRIMARY_COLOR, CUSTOM_ACCENT_COLOR, IS_GLOBAL_THEME_ENABLED, IS_SYSTEM_THEME_ENABLED,
+                AUTO_SYNC_MATERIAL_YOU
             )
         ) {
             if (::binding.isInitialized) {
@@ -759,18 +952,20 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     }
 
     private fun updateBackgroundColors() {
-        val backgroundColor = safeStorageContext.getKeyboardBackgroundColor()
-        binding.keyboardHolder.setBackgroundColor(backgroundColor)
-        window.window?.setSystemBarsAppearance(backgroundColor)
+        val palette = Material3Palette.resolve(this)
+        binding.keyboardHolder.setBackgroundColor(palette.backgroundColor)
+        window.window?.setSystemBarsAppearance(palette.backgroundColor)
 
-        val textColor = getProperTextColor()
-        val primaryColor = getProperPrimaryColor()
-        binding.toolbarExpandButton.setColorFilter(textColor)
-        binding.suggestionLeft.setTextColor(textColor)
-        binding.suggestionCenter.setTextColor(primaryColor)
-        binding.suggestionRight.setTextColor(textColor)
-        binding.suggestionDivider1.setBackgroundColor(textColor)
-        binding.suggestionDivider2.setBackgroundColor(textColor)
+        binding.toolbarExpandButton.setColorFilter(palette.textColor)
+        binding.suggestionLeft.setTextColor(palette.secondaryTextColor)
+        binding.suggestionCenter.setTextColor(palette.accentColor)
+        binding.suggestionRight.setTextColor(palette.secondaryTextColor)
+        binding.suggestionDivider1.setBackgroundColor(palette.strokeColor)
+        binding.suggestionDivider2.setBackgroundColor(palette.strokeColor)
+        binding.voiceInputButton.setColorFilter(palette.textColor)
+        binding.toolbarEmojiButton.setColorFilter(palette.textColor)
+        binding.pinnedClipboardItems.setColorFilter(palette.textColor)
+        binding.settingsCog.setColorFilter(palette.textColor)
     }
 
     private fun setupSuggestions() {
@@ -825,14 +1020,92 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             inputConnection.deleteSurroundingText(lengthToDelete, 0)
         }
         inputConnection.commitText("$word ", 1)
+        InputHistoryRecordingEngine.onReplaceBeforeCursor(this, lengthToDelete, "$word ")
         SuggestionEngine.learnWord(this, word)
+        SuggestionEngine.recordWordTransition(lastCommittedWord, word)
+        lastCommittedWord = word
         composingWord.clear()
-        hideSuggestions()
+        lastAutocorrect = null
+        keyboardView?.hideClipboardPasteChip()
         updateShiftKeyState()
         keyboardView?.performKeypressFeedback(MyKeyboard.KEYCODE_SPACE)
+
+        SuggestionEngine.getNextWordPredictionsAsync(word, null) { nextWords ->
+            binding.root.post {
+                if (nextWords.isNotEmpty()) {
+                    showSuggestions(nextWords)
+                } else {
+                    hideSuggestions()
+                }
+            }
+        }
+    }
+
+    private fun handleSpaceAutoCorrection(inputConnection: InputConnection) {
+        val word = composingWord.toString()
+        Log.d("IME_DEBUG", "handleSpaceAutoCorrection called for word='$word'")
+        if (word.isEmpty()) return
+
+        val correction = try {
+            SuggestionEngine.getAutoCorrection(word, lastCommittedWord.ifEmpty { null })
+        } catch (e: Exception) {
+            Log.e("IME_DEBUG", "Error during getAutoCorrection: ${e.message}", e)
+            null
+        }
+
+        val committed = try {
+            if (correction != null && correction != word) {
+                Log.d("IME_DEBUG", "Applying autocorrect: '$word' -> '$correction'")
+                lastAutocorrect = AutocorrectRecord(word, correction, System.currentTimeMillis())
+                val lengthToDelete = word.length
+                inputConnection.deleteSurroundingText(lengthToDelete, 0)
+                inputConnection.commitText(correction, 1)
+                inputConnection.commitText(" ", 1)
+                InputHistoryRecordingEngine.onReplaceBeforeCursor(this, lengthToDelete, "$correction ")
+                SuggestionEngine.learnWord(this, correction)
+                correction
+            } else {
+                Log.d("IME_DEBUG", "No autocorrect applied for '$word'")
+                lastAutocorrect = null
+                inputConnection.commitText(" ", 1)
+                InputHistoryRecordingEngine.onKeystroke(' ')
+                SuggestionEngine.learnWord(this, word)
+                word
+            }
+        } catch (e: Exception) {
+            Log.e("IME_DEBUG", "Error committing word: ${e.message}", e)
+            word
+        }
+
+        try {
+            SuggestionEngine.recordWordTransition(lastCommittedWord, committed)
+        } catch (e: Exception) {
+            Log.e("IME_DEBUG", "Error recording transition: ${e.message}", e)
+        }
+        lastCommittedWord = committed
+        composingWord.clear()
+        keyboardView?.hideClipboardPasteChip()
+
+        // Fetch next word predictions safely
+        try {
+            SuggestionEngine.getNextWordPredictionsAsync(committed, null) { nextWords ->
+                Log.d("IME_DEBUG", "Next word predictions for '$committed': $nextWords")
+                binding.root.post {
+                    if (nextWords.isNotEmpty()) {
+                        showSuggestions(nextWords)
+                    } else {
+                        hideSuggestions()
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("IME_DEBUG", "Error getting next word predictions: ${e.message}", e)
+        }
     }
 
     private fun showSuggestions(suggestions: List<String>) {
+        Log.d("IME_DEBUG", "showSuggestions called with: $suggestions")
+        PredictiveTouchTargetEngine.updateComposingPrefix(composingWord.toString())
         if (suggestions.isEmpty() || suggestions.all { it.isEmpty() }) {
             hideSuggestions()
             return
@@ -854,6 +1127,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         binding.suggestionRight.beVisibleIf(s2.isNotEmpty())
 
         if (!isQuickActionsExpanded) {
+            binding.toolbarHolder.beVisible()
             binding.wordSuggestionsHolder.beVisible()
             binding.toolbarQuickActionsHolder.beGone()
             binding.toolbarExpandButton.setImageResource(R.drawable.ic_chevron_right_vector)
@@ -862,6 +1136,7 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
     }
 
     private fun hideSuggestions() {
+        PredictiveTouchTargetEngine.updateComposingPrefix("")
         currentSuggestions = emptyList()
         if (::binding.isInitialized) {
             binding.suggestionLeft.text = ""
@@ -873,8 +1148,8 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
             binding.suggestionDivider2.beGone()
             binding.suggestionRight.beGone()
             if (!isQuickActionsExpanded) {
-                binding.wordSuggestionsHolder.beVisible()
-                binding.toolbarQuickActionsHolder.beGone()
+                binding.wordSuggestionsHolder.beGone()
+                binding.toolbarQuickActionsHolder.beVisible()
                 binding.toolbarExpandButton.setImageResource(R.drawable.ic_chevron_right_vector)
                 binding.toolbarExpandButton.contentDescription = getString(R.string.expand_actions)
             }
@@ -883,11 +1158,22 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
 
     override fun onFinishInputView(finishingInput: Boolean) {
         super.onFinishInputView(finishingInput)
+        org.fossify.keyboard.helpers.TouchPersonalizationManager.getInstance(this).flushOnPause()
+        InputHistoryRecordingEngine.onFinishInput(this)
         if (composingWord.isNotEmpty()) {
             SuggestionEngine.learnWord(this, composingWord.toString())
+            SuggestionEngine.recordWordTransition(lastCommittedWord, composingWord.toString())
             composingWord.clear()
             hideSuggestions()
         }
+        lastCommittedWord = ""
+        lastAutocorrect = null
+        SuggestionEngine.onFinishSession()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        SuggestionEngine.clearRejections()
     }
 
 
@@ -955,3 +1241,4 @@ class SimpleKeyboardIME : InputMethodService(), OnKeyboardActionListener, Shared
         return keyboard
     }
 }
+

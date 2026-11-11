@@ -9,18 +9,18 @@
         android:id="@+id/toolbar_holder"
         android:layout_width="match_parent"
         android:layout_height="@dimen/toolbar_height"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@+id/keyboard_view"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
         <ImageView
             android:id="@+id/toolbar_expand_button"
-            android:layout_width="@dimen/toolbar_icon_height"
-            android:layout_height="@dimen/toolbar_icon_height"
-            android:layout_marginStart="@dimen/small_margin"
+            android:layout_width="@dimen/toolbar_touch_target_min"
+            android:layout_height="match_parent"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/expand_actions"
-            android:padding="@dimen/small_margin"
+            android:scaleType="centerInside"
             android:src="@drawable/ic_chevron_right_vector"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -28,12 +28,11 @@
 
         <ImageView
             android:id="@+id/clipboard_clear"
-            android:layout_width="@dimen/toolbar_icon_height"
-            android:layout_height="@dimen/toolbar_icon_height"
-            android:layout_marginStart="@dimen/small_margin"
+            android:layout_width="@dimen/toolbar_touch_target_min"
+            android:layout_height="match_parent"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/clear_clipboard_data"
-            android:padding="@dimen/small_margin"
+            android:scaleType="centerInside"
             android:src="@drawable/ic_delete_vector"
             android:visibility="gone"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -96,32 +95,46 @@
 
             <ImageView
                 android:id="@+id/voice_input_button"
-                android:layout_width="@dimen/toolbar_icon_height"
-                android:layout_height="@dimen/toolbar_icon_height"
-                android:layout_marginEnd="@dimen/medium_margin"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:minWidth="@dimen/toolbar_touch_target_min"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/switch_to_voice_typing"
-                android:padding="@dimen/small_margin"
+                android:scaleType="centerInside"
                 android:src="@drawable/ic_microphone_vector" />
 
             <ImageView
+                android:id="@+id/toolbar_emoji_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:minWidth="@dimen/toolbar_touch_target_min"
+                android:background="?android:attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/emojis"
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_emoji_emotions_outline_vector" />
+
+            <ImageView
                 android:id="@+id/pinned_clipboard_items"
-                android:layout_width="@dimen/toolbar_icon_height"
-                android:layout_height="@dimen/toolbar_icon_height"
-                android:layout_marginEnd="@dimen/medium_margin"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:minWidth="@dimen/toolbar_touch_target_min"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/clipboard_pinned"
-                android:padding="@dimen/small_margin"
+                android:scaleType="centerInside"
                 android:src="@drawable/ic_clipboard_vector" />
 
             <ImageView
                 android:id="@+id/settings_cog"
-                android:layout_width="@dimen/toolbar_icon_height"
-                android:layout_height="@dimen/toolbar_icon_height"
-                android:layout_marginEnd="@dimen/medium_margin"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:minWidth="@dimen/toolbar_touch_target_min"
                 android:background="?android:attr/selectableItemBackgroundBorderless"
                 android:contentDescription="@string/settings"
-                android:padding="@dimen/small_margin"
+                android:scaleType="centerInside"
                 android:src="@drawable/ic_settings_cog_vector" />
 
         </LinearLayout>
@@ -215,8 +228,10 @@
         android:id="@+id/keyboard_view"
         style="@style/MyKeyboardView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@color/theme_dark_background_color"
+        android:layout_height="wrap_content"
+        android:minHeight="@dimen/keyboard_view_height"
+        android:background="@android:color/transparent"
+        app:layout_constraintTop_toBottomOf="@+id/toolbar_holder"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />

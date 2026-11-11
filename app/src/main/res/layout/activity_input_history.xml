@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/input_history_coordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <org.fossify.commons.views.MyAppBarLayout
+        android:id="@+id/input_history_appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/input_history_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/color_primary"
+            app:menu="@menu/menu_input_history"
+            app:title="@string/input_history"
+            app:titleTextAppearance="@style/AppTheme.ActionBar.TitleTextStyle" />
+
+    </org.fossify.commons.views.MyAppBarLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <!-- Locked Screen Overlay (Visible until unlocked) -->
+        <LinearLayout
+            android:id="@+id/history_locked_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:visibility="visible">
+
+            <ImageView
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:contentDescription="@null"
+                android:src="@drawable/ic_lock_vector"
+                app:tint="?attr/colorPrimary" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="@string/history_locked"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:alpha="0.75"
+                android:gravity="center"
+                android:lineSpacingMultiplier="1.2"
+                android:maxWidth="300dp"
+                android:text="@string/history_locked_desc"
+                android:textSize="14sp" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/history_unlock_button"
+                style="@style/Widget.Material3.Button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:text="@string/unlock"
+                app:icon="@drawable/ic_fingerprint_vector" />
+
+        </LinearLayout>
+
+        <!-- Main History Content (Hidden until unlocked) -->
+        <LinearLayout
+            android:id="@+id/history_main_content"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <!-- Calendar Component Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/calendar_card"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/activity_margin"
+                android:layout_marginTop="8dp"
+                android:layout_marginEnd="@dimen/activity_margin"
+                android:layout_marginBottom="6dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="0dp"
+                app:strokeColor="?attr/colorControlHighlight"
+                app:strokeWidth="1dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingStart="8dp"
+                    android:paddingTop="10dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="10dp">
+
+                    <!-- Calendar Header: Prev, Month & Year, Next, Today -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:id="@+id/calendar_prev_month"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@null"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_chevron_left_vector"
+                            app:tint="?attr/colorControlNormal" />
+
+                        <TextView
+                            android:id="@+id/calendar_month_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:gravity="center"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            tools:text="October 2026" />
+
+                        <ImageView
+                            android:id="@+id/calendar_next_month"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:contentDescription="@null"
+                            android:padding="8dp"
+                            android:src="@drawable/ic_chevron_right_vector"
+                            app:tint="?attr/colorControlNormal" />
+
+                        <TextView
+                            android:id="@+id/calendar_today_btn"
+                            android:layout_width="wrap_content"
+                            android:layout_height="32dp"
+                            android:layout_marginStart="4dp"
+                            android:background="@drawable/ripple_all_corners_medium"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:text="@string/today"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Weekday Labels Row (Sun, Mon, Tue, Wed, Thu, Fri, Sat) -->
+                    <LinearLayout
+                        android:id="@+id/calendar_weekdays_row"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:layout_marginBottom="4dp"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="S"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="M"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="T"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="W"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="T"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="F"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:alpha="0.6"
+                            android:gravity="center"
+                            android:text="S"
+                            android:textSize="12sp"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Calendar Grid (7 columns) -->
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/calendar_grid"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:nestedScrollingEnabled="false"
+                        android:overScrollMode="never" />
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Day View Section Header & Filter -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/activity_margin"
+                android:paddingTop="2dp"
+                android:paddingEnd="@dimen/activity_margin">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/selected_date_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        tools:text="Wednesday, Oct 24, 2026" />
+
+                    <TextView
+                        android:id="@+id/selected_date_summary"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:alpha="0.7"
+                        android:textSize="12sp"
+                        tools:text="8 sessions · 2-hour blocks" />
+
+                </LinearLayout>
+
+                <com.google.android.material.chip.ChipGroup
+                    android:id="@+id/input_history_filter_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:selectionRequired="true"
+                    app:singleLine="true"
+                    app:singleSelection="true">
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filter_chip_all"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:checked="true"
+                        android:text="@string/filter_all"
+                        android:textSize="11sp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filter_chip_sent"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/filter_sent"
+                        android:textSize="11sp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filter_chip_discarded"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/filter_discarded"
+                        android:textSize="11sp" />
+
+                    <com.google.android.material.chip.Chip
+                        android:id="@+id/filter_chip_unclear"
+                        style="@style/Widget.Material3.Chip.Filter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/filter_unclear"
+                        android:textSize="11sp" />
+
+                </com.google.android.material.chip.ChipGroup>
+
+            </LinearLayout>
+
+            <!-- Time-Blocked Day View List & Empty State -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1">
+
+                <org.fossify.commons.views.MyRecyclerView
+                    android:id="@+id/time_blocked_list"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clipToPadding="false"
+                    android:paddingTop="2dp"
+                    android:paddingBottom="16dp"
+                    app:layoutManager="org.fossify.commons.views.MyLinearLayoutManager" />
+
+                <TextView
+                    android:id="@+id/input_history_placeholder"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerInParent="true"
+                    android:alpha="0.75"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.2"
+                    android:padding="@dimen/activity_margin"
+                    android:text="@string/no_sessions_on_date"
+                    android:textSize="@dimen/bigger_text_size"
+                    android:visibility="gone" />
+
+            </RelativeLayout>
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

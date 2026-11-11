@@ -12,14 +12,29 @@ const val MAX_KEYS_PER_MINI_ROW = 9
 
 // shared prefs
 const val VIBRATE_ON_KEYPRESS = "vibrate_on_keypress"
+const val HAPTIC_STRENGTH = "haptic_strength"
+const val DEFAULT_HAPTIC_STRENGTH = 60
 
 const val SOUND_ON_KEYPRESS = "sound_on_keypress"
 const val SOUND_NONE = 0
 const val SOUND_SYSTEM = 1
 const val SOUND_ALWAYS = 2
+const val SOUND_VOLUME = "sound_volume"
+const val DEFAULT_SOUND_VOLUME = 80
 
 const val SHOW_POPUP_ON_KEYPRESS = "show_popup_on_keypress"
+const val LONG_PRESS_DELAY_MS = "long_press_delay_ms"
+const val DEFAULT_LONG_PRESS_DELAY_MS = 300L
+const val PERSONALISE_TOUCH = "personalise_touch"
+const val SHOW_TOUCH_DEBUG_OVERLAY = "show_touch_debug_overlay"
+
+
+
+const val AUTO_SYNC_MATERIAL_YOU = "auto_sync_material_you"
 const val SHOW_KEY_BORDERS = "show_key_borders"
+const val KEYBOARD_HEIGHT_PRESET = "keyboard_height_preset"
+const val KEYBOARD_ONE_HANDED_MODE = "keyboard_one_handed_mode"
+const val LONG_PRESS_SYMBOLS = "long_press_symbols"
 const val SENTENCES_CAPITALIZATION = "sentences_capitalization"
 const val SHOW_EMOJI_KEY = "show_emoji_key"
 const val SHOW_LANGUAGE_SWITCH_KEY = "show_language_switch_key"
@@ -31,6 +46,11 @@ const val SHOW_NUMBERS_ROW = "show_numbers_row"
 const val SELECTED_LANGUAGES = "selected_languages"
 const val VOICE_INPUT_METHOD = "voice_input_method"
 const val RECENTLY_USED_EMOJIS = "recently_used_emojis"
+const val DOUBLE_SPACE_PERIOD = "double_space_period"
+const val RECORD_INPUT_HISTORY = "record_input_history"
+const val BLOCKED_HISTORY_PACKAGES = "blocked_history_packages"
+const val HISTORY_RETENTION_DAYS = "history_retention_days"
+const val HISTORY_LOCK_ENABLED = "history_lock_enabled"
 
 // differentiate current and pinned clips at the keyboards' Clipboard section
 const val ITEM_SECTION_LABEL = 0

@@ -7,9 +7,11 @@
             app:keyWidth="25%p" />
         <Key
             app:keyLabel="2"
+            app:keySublabel="ABC"
             app:keyWidth="25%p" />
         <Key
             app:keyLabel="3"
+            app:keySublabel="DEF"
             app:keyWidth="25%p" />
         <Key
             app:keyEdgeFlags="right"
@@ -20,12 +22,15 @@
         <Key
             app:keyEdgeFlags="left"
             app:keyLabel="4"
+            app:keySublabel="GHI"
             app:keyWidth="25%p" />
         <Key
             app:keyLabel="5"
+            app:keySublabel="JKL"
             app:keyWidth="25%p" />
         <Key
             app:keyLabel="6"
+            app:keySublabel="MNO"
             app:keyWidth="25%p" />
         <Key
             app:code="32"
@@ -37,12 +42,15 @@
         <Key
             app:keyEdgeFlags="left"
             app:keyLabel="7"
+            app:keySublabel="PQRS"
             app:keyWidth="25%p" />
         <Key
             app:keyLabel="8"
+            app:keySublabel="TUV"
             app:keyWidth="25%p" />
         <Key
             app:keyLabel="9"
+            app:keySublabel="WXYZ"
             app:keyWidth="25%p" />
         <Key
             app:code="-5"
@@ -53,13 +61,19 @@
     </Row>
     <Row>
         <Key
+            app:code="-2"
             app:keyEdgeFlags="left"
-            app:keyLabel=","
+            app:keyLabel="ABC"
             app:keyWidth="25%p" />
         <Key
+            app:code="48"
             app:keyLabel="0"
-            app:keyWidth="25%p" />
+            app:keySublabel="+"
+            app:keyWidth="25%p"
+            app:popupCharacters="-+,./"
+            app:popupKeyboard="@xml/keyboard_popup_template" />
         <Key
+            app:code="46"
             app:keyLabel="."
             app:keyWidth="25%p" />
         <Key

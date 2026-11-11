@@ -22,4 +22,7 @@ interface LearnedWordsDao {
 
     @Query("DELETE FROM learned_words WHERE word = :word")
     fun deleteWord(word: String)
+
+    @Query("DELETE FROM learned_words")
+    fun clearAll()
 }

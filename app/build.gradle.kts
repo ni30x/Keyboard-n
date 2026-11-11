@@ -126,6 +126,10 @@ android {
             enableSplit = false
         }
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 detekt {
@@ -139,8 +143,11 @@ dependencies {
     implementation(libs.fossify.commons)
     implementation(libs.androidx.emoji2.bundled)
     implementation(libs.androidx.autofill)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.security.crypto)
 
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
     detektPlugins(libs.compose.detekt)
+    testImplementation(libs.junit)
 }

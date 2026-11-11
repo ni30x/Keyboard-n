@@ -42,6 +42,21 @@
                 android:layout_height="wrap_content"
                 android:text="@string/color_customization" />
 
+            <RelativeLayout
+                android:id="@+id/settings_auto_sync_material_you_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_auto_sync_material_you"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/auto_sync_material_you" />
+
+            </RelativeLayout>
+
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/settings_color_customization_holder"
                 style="@style/SettingsHolderTextViewOneLinerStyle"
@@ -245,6 +260,50 @@
 
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/settings_keyboard_height_preset_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_keyboard_height_preset_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Keyboard Height Preset (7 Levels)" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_keyboard_height_preset_value"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_keyboard_height_preset_label"
+                    tools:text="Normal (100%)" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_one_handed_mode_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_one_handed_mode_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="One-Handed / Floating Mode" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_one_handed_mode_value"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_one_handed_mode_label"
+                    tools:text="Off" />
+            </RelativeLayout>
+
             <include
                 android:id="@+id/settings_layout_appearance_divider"
                 layout="@layout/divider" />
@@ -287,6 +346,29 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/settings_haptic_strength_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_haptic_strength_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/haptic_strength" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_haptic_strength"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_haptic_strength_label"
+                    tools:text="60%" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:id="@+id/settings_sound_on_keypress_holder"
                 style="@style/SettingsHolderTextViewStyle"
                 android:layout_width="match_parent"
@@ -305,6 +387,97 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_below="@+id/settings_sound_on_keypress_label" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_sound_volume_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_sound_volume_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/sound_volume" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_sound_volume"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_sound_volume_label"
+                    tools:text="80%" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_long_press_delay_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_long_press_delay_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/long_press_delay" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_long_press_delay"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_long_press_delay_label"
+                    tools:text="300 ms" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_personalise_touch_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_personalise_touch"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/personalise_touch" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_reset_touch_data_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_reset_touch_data"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/reset_touch_data" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_show_touch_debug_overlay_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_show_touch_debug_overlay"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/show_touch_debug_overlay" />
 
             </RelativeLayout>
 
@@ -395,6 +568,173 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/show_clipboard_content" />
+
+            </RelativeLayout>
+
+            <include
+                android:id="@+id/settings_input_history_divider"
+                layout="@layout/divider" />
+
+            <TextView
+                android:id="@+id/settings_input_history_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/input_history" />
+
+            <RelativeLayout
+                android:id="@+id/settings_record_input_history_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_record_input_history"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/record_input_history" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_excluded_apps_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_excluded_apps_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/excluded_apps" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_excluded_apps_summary"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_excluded_apps_label"
+                    tools:text="@string/no_excluded_apps" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_input_history_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_input_history_title"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/view_input_history" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_input_history_desc"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_input_history_title"
+                    android:text="@string/input_history_summary" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_history_retention_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_history_retention_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/history_retention" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_history_retention_value"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_history_retention_label"
+                    tools:text="@string/history_retention_forever" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_history_lock_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_history_lock"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/history_lock" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_debug_logs_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_debug_logs"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/debug_logs_title" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_debug_logs_summary"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_debug_logs"
+                    android:text="@string/debug_logs_summary" />
+
+            </RelativeLayout>
+
+            <include
+                android:id="@+id/settings_personal_dictionary_divider"
+                layout="@layout/divider" />
+
+            <TextView
+                android:id="@+id/settings_personal_dictionary_section_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/personal_dictionary" />
+
+            <RelativeLayout
+                android:id="@+id/settings_personal_dictionary_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_personal_dictionary_title"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/manage_learned_words" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_personal_dictionary_desc"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_personal_dictionary_title"
+                    android:text="@string/manage_learned_words_summary" />
 
             </RelativeLayout>
 

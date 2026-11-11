@@ -8,7 +8,7 @@ import org.fossify.keyboard.models.Clip
 
 @Dao
 interface ClipsDao {
-    @Query("SELECT * FROM clips ORDER BY id")
+    @Query("SELECT * FROM clips ORDER BY id DESC")
     fun getClips(): List<Clip>
 
     @Query("SELECT id FROM clips WHERE value = :value")
@@ -19,6 +19,9 @@ interface ClipsDao {
 
     @Query("DELETE FROM clips WHERE id = :id")
     fun delete(id: Long)
+
+    @Query("DELETE FROM clips WHERE value = :value")
+    fun deleteByValue(value: String)
 
     @Query("DELETE FROM clips")
     fun deleteAll()

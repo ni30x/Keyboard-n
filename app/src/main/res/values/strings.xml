@@ -3,6 +3,7 @@
     <string name="app_launcher_name">Keyboard</string>
     <string name="redirection_note">Please enable Fossify Keyboard on the next screen, to make it an available keyboard. Press \'Back\' once enabled.</string>
     <string name="change_keyboard">Change Keyboard</string>
+    <string name="auto_sync_material_you">Material 3 Dynamic Colors (Auto-sync with system)</string>
     <!-- Clipboard -->
     <string name="manage_clipboard_items">Manage clipboard items</string>
     <string name="manage_clipboard_empty">Your clipboard is empty.</string>
@@ -38,6 +39,16 @@
     <string name="sound_none">Off</string>
     <string name="sound_system">Follow system</string>
     <string name="sound_always">Always on</string>
+    <string name="haptic_strength">Haptic feedback strength</string>
+    <string name="sound_volume">Keypress sound volume</string>
+    <string name="long_press_delay">Key long-press delay</string>
+    <string name="personalise_touch">Personalise touch</string>
+    <string name="personalise_touch_summary">Learn your individual tap offsets on this device</string>
+    <string name="reset_touch_data">Reset learned touch data</string>
+    <string name="reset_touch_data_confirmation">Are you sure you want to reset all learned touch personalization models?</string>
+    <string name="touch_data_reset_success">Touch personalization data has been reset</string>
+    <string name="show_touch_debug_overlay">Show touch personalization debug overlay</string>
+    <string name="show_touch_debug_overlay_summary">Display effective touch centers and offset vectors</string>
     <string name="keyboard_language">Keyboard language</string>
     <string name="keyboard_height">Keyboard height</string>
     <string name="show_key_borders">Show key borders</string>
@@ -62,8 +73,96 @@
     <string name="switch_to_voice_typing">Switch to voice typing</string>
     <string name="expand_actions">Expand quick actions</string>
     <string name="collapse_actions">Collapse quick actions</string>
-    <!--
-        Haven't found some strings? There's more at
-        https://github.com/FossifyOrg/Commons/tree/master/commons/src/main/res
-    -->
+    <!-- Input History -->
+    <string name="input_history">Input history</string>
+    <string name="input_history_summary">View recorded sessions and non-destructive deletion ledger</string>
+    <string name="no_input_history">No input history recorded yet.\nNon-password input sessions will appear here.</string>
+    <string name="filter_all">All</string>
+    <string name="filter_sent">Sent</string>
+    <string name="filter_discarded">Discarded</string>
+    <string name="filter_unclear">Unclear</string>
+    <string name="clear_history">Clear history</string>
+    <string name="clear_history_confirmation">Are you sure you want to clear all input history records?</string>
+    <string name="today">Today</string>
+    <string name="no_sessions_on_date">No sessions recorded on this date.\nSelect a date marked with a dot above.</string>
+    <string name="time_blocks_summary">2-hour time blocks</string>
+    <!-- Phase 5 Security & Auth Gate -->
+    <string name="unlock_input_history">Unlock Input History</string>
+    <string name="authenticate_to_access_history">Authenticate to access recorded sessions</string>
+    <string name="use_pin">Use PIN</string>
+    <string name="use_biometrics">Use Biometrics</string>
+    <string name="set_history_pin">Set History PIN</string>
+    <string name="set_history_pin_desc">Create a 4–8 digit PIN to protect your recorded input history.</string>
+    <string name="enter_pin">Enter PIN</string>
+    <string name="confirm_pin">Confirm PIN</string>
+    <string name="pin_mismatch">PINs do not match. Please re-enter.</string>
+    <string name="pin_too_short">PIN must be at least 4 digits.</string>
+    <string name="incorrect_pin">Incorrect PIN. Please try again.</string>
+    <string name="history_locked">Input History is locked</string>
+    <string name="history_locked_desc">Authenticate with biometric or PIN to view recorded sessions.</string>
+    <string name="unlock">Unlock</string>
+    <string name="change_pin">Change PIN</string>
+    <string name="pin_saved">PIN saved successfully</string>
+    <!-- Phase 6 Encrypted Export & Import -->
+    <string name="export_history">Export history</string>
+    <string name="import_history">Import history</string>
+    <string name="export_history_title">Export Encrypted History</string>
+    <string name="export_history_desc">Choose a password to encrypt this backup. You will need this password when importing.</string>
+    <string name="import_history_title">Import Encrypted History</string>
+    <string name="import_history_desc">Enter the password used when creating this encrypted backup file.</string>
+    <string name="password">Password</string>
+    <string name="confirm_password">Confirm Password</string>
+    <string name="password_too_short">Password must be at least 6 characters.</string>
+    <string name="passwords_dont_match">Passwords do not match.</string>
+    <string name="password_required">Password is required.</string>
+    <string name="export_successful">Exported %1$d sessions successfully.</string>
+    <string name="import_successful">Imported %1$d sessions successfully.</string>
+    <string name="no_sessions_to_export">No history records to export.</string>
+    <string name="export_failed">Export failed: %1$s</string>
+    <string name="import_failed">Import failed: %1$s</string>
+    <!-- Phase 7 Retention Controls -->
+    <string name="record_input_history">Record input history</string>
+    <string name="record_input_history_summary">Buffer and record input sessions and deletion events</string>
+    <string name="excluded_apps">Excluded apps</string>
+    <string name="excluded_apps_summary">Apps where input recording is disabled</string>
+    <string name="no_excluded_apps">None</string>
+    <string name="view_input_history">View input history</string>
+    <string name="clear_history_pin_title">Confirm Permanent Deletion</string>
+    <string name="clear_history_pin_desc">Enter your PIN to permanently delete all recorded input sessions and deletion ledger events. This action cannot be undone.</string>
+    <string name="permanently_delete">Permanently Delete</string>
+    <string name="history_permanently_cleared">All input history permanently deleted.</string>
+    <string name="select_excluded_apps">Select Excluded Apps</string>
+    <string name="manage_excluded_apps">Manage excluded apps</string>
+    <string name="history_retention">History retention</string>
+    <string name="history_retention_forever">Keep forever (default)</string>
+    <string name="history_retention_7_days">7 days</string>
+    <string name="history_retention_30_days">30 days</string>
+    <string name="history_retention_90_days">90 days</string>
+    <string name="history_lock">Lock input history</string>
+    <string name="history_lock_summary">Require authentication before viewing history</string>
+
+    <!-- Personal Dictionary -->
+    <string name="personal_dictionary">Personal dictionary</string>
+    <string name="manage_learned_words">Learned words</string>
+    <string name="manage_learned_words_summary">View, delete, or clear words learned from your typing</string>
+    <string name="no_learned_words">No learned words yet</string>
+    <string name="clear_all_learned_words">Clear all words</string>
+    <string name="clear_learned_words_confirm">Are you sure you want to delete all learned words and reset personal suggestions?</string>
+    <string name="learned_words_cleared">Learned words cleared</string>
+    <string name="delete_word">Delete word</string>
+    <string name="delete_word_confirm">Delete \"%1$s\" from your personal dictionary?</string>
+    <string name="word_frequency">Typed %1$d times</string>
+
+    <!-- Debug & Crash Diagnostics -->
+    <string name="debug_logs_title">Debug &amp; crash logs</string>
+    <string name="debug_logs_summary">Inspect engine activity, recent events, and crash reports</string>
+    <string name="copy_logs">Copy</string>
+    <string name="share_logs">Share</string>
+    <string name="clear_logs">Clear</string>
+    <string name="logs_copied_to_clipboard">Diagnostic logs copied to clipboard</string>
+    <string name="clear_logs_confirmation">Clear all diagnostic event history and saved crash reports?</string>
+    <string name="logs_cleared">Logs cleared</string>
+    <string name="status_crash_detected">Crash Detected</string>
+    <string name="status_no_crashes">No Crashes Detected</string>
+    <string name="status_healthy_summary">Engine and keyboard are operating normally.</string>
 </resources>

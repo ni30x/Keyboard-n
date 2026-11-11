@@ -2,7 +2,9 @@ package org.fossify.keyboard.activities
 
 import android.content.Intent
 import android.os.Bundle
+import org.fossify.commons.dialogs.ConfirmationDialog
 import org.fossify.commons.dialogs.RadioGroupDialog
+import org.fossify.commons.extensions.beGoneIf
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.toast
@@ -14,7 +16,13 @@ import org.fossify.commons.models.RadioItem
 import org.fossify.keyboard.R
 import org.fossify.keyboard.databinding.ActivitySettingsBinding
 import org.fossify.keyboard.dialogs.ManageKeyboardLanguagesDialog
+import org.fossify.keyboard.dialogs.ManageExcludedAppsDialog
+import org.fossify.keyboard.dialogs.SliderPreferenceDialog
 import org.fossify.keyboard.extensions.config
+import org.fossify.keyboard.helpers.FeedbackManager
+import org.fossify.keyboard.helpers.InputHistoryRecordingEngine
+import org.fossify.keyboard.helpers.MyKeyboard
+import org.fossify.keyboard.helpers.TouchPersonalizationManager
 import org.fossify.keyboard.extensions.getCurrentVoiceInputMethod
 import org.fossify.keyboard.extensions.getKeyboardLanguageText
 import org.fossify.keyboard.extensions.getKeyboardLanguagesRadioItems
@@ -50,13 +58,20 @@ class SettingsActivity : SimpleActivity() {
         super.onResume()
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
 
+        setupAutoSyncMaterialYou()
         setupCustomizeColors()
         setupUseEnglish()
         setupLanguage()
         setupManageClipboardItems()
         setupVibrateOnKeypress()
+        setupHapticStrength()
         setupSoundOnKeypress()
+        setupSoundVolume()
+        setupLongPressDelay()
         setupShowPopupOnKeypress()
+        setupPersonaliseTouch()
+        setupResetTouchData()
+        setupShowTouchDebugOverlay()
         setupShowKeyBorders()
         setupManageKeyboardLanguages()
         setupKeyboardLanguage()
@@ -66,7 +81,17 @@ class SettingsActivity : SimpleActivity() {
         setupShowClipboardContent()
         setupSentencesCapitalization()
         setupShowNumbersRow()
+        setupKeyboardHeightPreset()
+        setupOneHandedMode()
+        setupShowKeyBordersToggle()
         setupVoiceInputMethod()
+        setupRecordInputHistory()
+        setupExcludedApps()
+        setupInputHistory()
+        setupHistoryRetention()
+        setupHistoryLock()
+        setupDebugLogs()
+        setupPersonalDictionary()
 
         binding.apply {
             updateTextColors(settingsNestedScrollview)
@@ -77,9 +102,23 @@ class SettingsActivity : SimpleActivity() {
                 settingsLayoutAppearanceLabel,
                 settingsKeypressLabel,
                 settingsTypingInputLabel,
-                settingsClipboardSettingsLabel
+                settingsClipboardSettingsLabel,
+                settingsInputHistoryLabel,
+                settingsPersonalDictionarySectionLabel
             ).forEach {
                 it.setTextColor(getProperPrimaryColor())
+            }
+        }
+    }
+
+    private fun setupAutoSyncMaterialYou() {
+        binding.apply {
+            settingsAutoSyncMaterialYou.isChecked = config.autoSyncMaterialYou
+            settingsColorCustomizationHolder.beGoneIf(config.autoSyncMaterialYou)
+            settingsAutoSyncMaterialYouHolder.setOnClickListener {
+                settingsAutoSyncMaterialYou.toggle()
+                config.autoSyncMaterialYou = settingsAutoSyncMaterialYou.isChecked
+                settingsColorCustomizationHolder.beGoneIf(config.autoSyncMaterialYou)
             }
         }
     }
@@ -122,12 +161,119 @@ class SettingsActivity : SimpleActivity() {
         }
     }
 
+    private fun setupRecordInputHistory() {
+        binding.apply {
+            settingsRecordInputHistory.isChecked = config.recordInputHistory
+            settingsRecordInputHistoryHolder.setOnClickListener {
+                settingsRecordInputHistory.toggle()
+                config.recordInputHistory = settingsRecordInputHistory.isChecked
+                if (!config.recordInputHistory) {
+                    InputHistoryRecordingEngine.stopRecording()
+                }
+            }
+        }
+    }
+
+    private fun setupExcludedApps() {
+        binding.apply {
+            updateExcludedAppsSummary()
+            settingsExcludedAppsHolder.setOnClickListener {
+                ManageExcludedAppsDialog(this@SettingsActivity) {
+                    updateExcludedAppsSummary()
+                }.show()
+            }
+        }
+    }
+
+    private fun updateExcludedAppsSummary() {
+        val count = config.blockedHistoryPackages.size
+        binding.settingsExcludedAppsSummary.text = when (count) {
+            0 -> getString(R.string.no_excluded_apps)
+            1 -> "1 app excluded"
+            else -> "$count apps excluded"
+        }
+    }
+
+    private fun setupInputHistory() {
+        binding.settingsInputHistoryHolder.setOnClickListener {
+            Intent(this, InputHistoryActivity::class.java).apply {
+                startActivity(this)
+            }
+        }
+    }
+
+    private fun setupHistoryRetention() {
+        val retentionOptions = listOf(
+            0 to getString(R.string.history_retention_forever),
+            7 to getString(R.string.history_retention_7_days),
+            30 to getString(R.string.history_retention_30_days),
+            90 to getString(R.string.history_retention_90_days)
+        )
+        binding.apply {
+            val currentDays = config.historyRetentionDays
+            settingsHistoryRetentionValue.text = retentionOptions.firstOrNull { it.first == currentDays }?.second
+                ?: getString(R.string.history_retention_forever)
+
+            settingsHistoryRetentionHolder.setOnClickListener {
+                val items = retentionOptions.map { (days, label) -> RadioItem(days, label) }.toCollection(ArrayList())
+                RadioGroupDialog(
+                    activity = this@SettingsActivity,
+                    items = items,
+                    checkedItemId = config.historyRetentionDays
+                ) {
+                    val selectedDays = it as Int
+                    config.historyRetentionDays = selectedDays
+                    settingsHistoryRetentionValue.text = retentionOptions.firstOrNull { opt -> opt.first == selectedDays }?.second
+                        ?: getString(R.string.history_retention_forever)
+                }
+            }
+        }
+    }
+
+    private fun setupHistoryLock() {
+        binding.apply {
+            settingsHistoryLock.isChecked = config.historyLockEnabled
+            settingsHistoryLockHolder.setOnClickListener {
+                settingsHistoryLock.toggle()
+                config.historyLockEnabled = settingsHistoryLock.isChecked
+            }
+        }
+    }
+
     private fun setupVibrateOnKeypress() {
         binding.apply {
             settingsVibrateOnKeypress.isChecked = config.vibrateOnKeypress
+            settingsHapticStrengthHolder.beVisibleIf(config.vibrateOnKeypress)
             settingsVibrateOnKeypressHolder.setOnClickListener {
                 settingsVibrateOnKeypress.toggle()
                 config.vibrateOnKeypress = settingsVibrateOnKeypress.isChecked
+                settingsHapticStrengthHolder.beVisibleIf(config.vibrateOnKeypress)
+            }
+        }
+    }
+
+    private fun setupHapticStrength() {
+        binding.apply {
+            settingsHapticStrength.text = "${config.hapticStrength}%"
+            settingsHapticStrengthHolder.setOnClickListener {
+                val feedbackManager = FeedbackManager(this@SettingsActivity)
+                SliderPreferenceDialog(
+                    activity = this@SettingsActivity,
+                    title = getString(R.string.haptic_strength),
+                    min = 1,
+                    max = 100,
+                    initialValue = config.hapticStrength,
+                    step = 1,
+                    formatValue = { "$it%" },
+                    onProgressChanged = { strength ->
+                        config.hapticStrength = strength
+                        feedbackManager.performHaptic(binding.root)
+                    },
+                    onConfirmed = { strength ->
+                        config.hapticStrength = strength
+                        settingsHapticStrength.text = "$strength%"
+                    }
+                ).show()
             }
         }
     }
@@ -135,12 +281,14 @@ class SettingsActivity : SimpleActivity() {
     private fun setupSoundOnKeypress() {
         binding.apply {
             settingsSoundOnKeypress.text = getSoundOnKeypressText(config.soundOnKeypress)
+            settingsSoundVolumeHolder.beVisibleIf(config.soundOnKeypress != SOUND_NONE)
             settingsSoundOnKeypressHolder.setOnClickListener {
                 val items = arrayListOf(
                     RadioItem(SOUND_NONE, getString(R.string.sound_none)),
                     RadioItem(SOUND_SYSTEM, getString(R.string.sound_system)),
                     RadioItem(SOUND_ALWAYS, getString(R.string.sound_always))
                 )
+
                 RadioGroupDialog(
                     activity = this@SettingsActivity,
                     items = items,
@@ -148,7 +296,55 @@ class SettingsActivity : SimpleActivity() {
                 ) {
                     config.soundOnKeypress = it as Int
                     settingsSoundOnKeypress.text = getSoundOnKeypressText(config.soundOnKeypress)
+                    settingsSoundVolumeHolder.beVisibleIf(config.soundOnKeypress != SOUND_NONE)
                 }
+            }
+        }
+    }
+
+    private fun setupSoundVolume() {
+        binding.apply {
+            settingsSoundVolume.text = "${config.soundVolume}%"
+            settingsSoundVolumeHolder.setOnClickListener {
+                val feedbackManager = FeedbackManager(this@SettingsActivity)
+                SliderPreferenceDialog(
+                    activity = this@SettingsActivity,
+                    title = getString(R.string.sound_volume),
+                    min = 0,
+                    max = 100,
+                    initialValue = config.soundVolume,
+                    step = 5,
+                    formatValue = { "$it%" },
+                    onProgressChanged = { vol ->
+                        config.soundVolume = vol
+                        feedbackManager.performSound(MyKeyboard.KEYCODE_SPACE)
+                    },
+                    onConfirmed = { vol ->
+                        config.soundVolume = vol
+                        settingsSoundVolume.text = "$vol%"
+                    }
+                ).show()
+            }
+        }
+    }
+
+    private fun setupLongPressDelay() {
+        binding.apply {
+            settingsLongPressDelay.text = "${config.longPressDelayMs} ms"
+            settingsLongPressDelayHolder.setOnClickListener {
+                SliderPreferenceDialog(
+                    activity = this@SettingsActivity,
+                    title = getString(R.string.long_press_delay),
+                    min = 100,
+                    max = 700,
+                    initialValue = config.longPressDelayMs.toInt(),
+                    step = 10,
+                    formatValue = { "$it ms" },
+                    onConfirmed = { delay ->
+                        config.longPressDelayMs = delay.toLong()
+                        settingsLongPressDelay.text = "$delay ms"
+                    }
+                ).show()
             }
         }
     }
@@ -167,6 +363,43 @@ class SettingsActivity : SimpleActivity() {
             settingsShowPopupOnKeypressHolder.setOnClickListener {
                 settingsShowPopupOnKeypress.toggle()
                 config.showPopupOnKeypress = settingsShowPopupOnKeypress.isChecked
+            }
+        }
+    }
+
+    private fun setupPersonaliseTouch() {
+        binding.apply {
+            settingsPersonaliseTouch.isChecked = config.personaliseTouch
+            settingsResetTouchDataHolder.beVisibleIf(config.personaliseTouch)
+            settingsPersonaliseTouchHolder.setOnClickListener {
+                settingsPersonaliseTouch.toggle()
+                config.personaliseTouch = settingsPersonaliseTouch.isChecked
+                settingsResetTouchDataHolder.beVisibleIf(config.personaliseTouch)
+            }
+        }
+    }
+
+    private fun setupResetTouchData() {
+        binding.settingsResetTouchDataHolder.setOnClickListener {
+            ConfirmationDialog(
+                activity = this,
+                message = getString(R.string.reset_touch_data_confirmation),
+                positive = R.string.ok,
+                negative = R.string.cancel
+            ) {
+                TouchPersonalizationManager.getInstance(this).resetAllData {
+                    toast(R.string.touch_data_reset_success)
+                }
+            }
+        }
+    }
+
+    private fun setupShowTouchDebugOverlay() {
+        binding.apply {
+            settingsShowTouchDebugOverlay.isChecked = config.showTouchDebugOverlay
+            settingsShowTouchDebugOverlayHolder.setOnClickListener {
+                settingsShowTouchDebugOverlay.toggle()
+                config.showTouchDebugOverlay = settingsShowTouchDebugOverlay.isChecked
             }
         }
     }
@@ -333,6 +566,74 @@ class SettingsActivity : SimpleActivity() {
                             ?: getString(R.string.none)
                 }
             }
+        }
+    }
+
+    private val heightPresetLabels = arrayOf(
+        "Extra Short (70%)",
+        "Short (80%)",
+        "Medium-Short (90%)",
+        "Normal (100%)",
+        "Tall (120%)",
+        "Very Tall (140%)",
+        "Extra Tall (160%)"
+    )
+
+    private fun setupKeyboardHeightPreset() {
+        binding.apply {
+            settingsKeyboardHeightPresetValue.text = heightPresetLabels.getOrNull(config.keyboardHeightPreset) ?: heightPresetLabels[3]
+            settingsKeyboardHeightPresetHolder.setOnClickListener {
+                val items = heightPresetLabels.mapIndexed { index, label -> RadioItem(index, label) }.toCollection(ArrayList())
+                RadioGroupDialog(
+                    activity = this@SettingsActivity,
+                    items = items,
+                    checkedItemId = config.keyboardHeightPreset
+                ) {
+                    config.keyboardHeightPreset = it as Int
+                    settingsKeyboardHeightPresetValue.text = heightPresetLabels[config.keyboardHeightPreset]
+                }
+            }
+        }
+    }
+
+    private val oneHandedLabels = arrayOf("Off", "Left-Handed", "Right-Handed", "Floating / Movable")
+
+    private fun setupOneHandedMode() {
+        binding.apply {
+            settingsOneHandedModeValue.text = oneHandedLabels.getOrNull(config.oneHandedMode) ?: oneHandedLabels[0]
+            settingsOneHandedModeHolder.setOnClickListener {
+                val items = oneHandedLabels.mapIndexed { index, label -> RadioItem(index, label) }.toCollection(ArrayList())
+                RadioGroupDialog(
+                    activity = this@SettingsActivity,
+                    items = items,
+                    checkedItemId = config.oneHandedMode
+                ) {
+                    config.oneHandedMode = it as Int
+                    settingsOneHandedModeValue.text = oneHandedLabels[config.oneHandedMode]
+                }
+            }
+        }
+    }
+
+    private fun setupShowKeyBordersToggle() {
+        binding.apply {
+            settingsShowKeyBorders.isChecked = config.showKeyBorders
+            settingsShowKeyBordersHolder.setOnClickListener {
+                settingsShowKeyBorders.toggle()
+                config.showKeyBorders = settingsShowKeyBorders.isChecked
+            }
+        }
+    }
+
+    private fun setupDebugLogs() {
+        binding.settingsDebugLogsHolder.setOnClickListener {
+            startActivity(Intent(this, DebugLogActivity::class.java))
+        }
+    }
+
+    private fun setupPersonalDictionary() {
+        binding.settingsPersonalDictionaryHolder.setOnClickListener {
+            startActivity(Intent(this, PersonalDictionaryActivity::class.java))
         }
     }
 }

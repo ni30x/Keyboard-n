@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_export"
+        android:title="@string/export_history"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_import"
+        android:title="@string/import_history"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_manage_excluded_apps"
+        android:title="@string/manage_excluded_apps"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_change_pin"
+        android:title="@string/change_pin"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_lock_now"
+        android:icon="@drawable/ic_lock_vector"
+        android:title="@string/history_locked"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_view_logs"
+        android:icon="@drawable/ic_bug_report_vector"
+        android:title="@string/debug_logs_title"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_clear_all"
+        android:icon="@drawable/ic_delete_vector"
+        android:title="@string/clear_history"
+        app:showAsAction="ifRoom" />
+</menu>

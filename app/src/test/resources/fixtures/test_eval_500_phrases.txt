@@ -1,0 +1,500 @@
+i think that it works well
+i think you will succeed
+i think everything is ready
+i think we are on track
+i think this is important
+i think they are coming soon
+i think it will be great
+i think things will improve
+i think we have enough time
+i think it makes good sense
+i believe that it works well
+i believe you will succeed
+i believe everything is ready
+i believe we are on track
+i believe this is important
+i believe they are coming soon
+i believe it will be great
+i believe things will improve
+i believe we have enough time
+i believe it makes good sense
+i know that it works well
+i know you will succeed
+i know everything is ready
+i know we are on track
+i know this is important
+i know they are coming soon
+i know it will be great
+i know things will improve
+i know we have enough time
+i know it makes good sense
+i hope that it works well
+i hope you will succeed
+i hope everything is ready
+i hope we are on track
+i hope this is important
+i hope they are coming soon
+i hope it will be great
+i hope things will improve
+i hope we have enough time
+i hope it makes good sense
+i feel that it works well
+i feel you will succeed
+i feel everything is ready
+i feel we are on track
+i feel this is important
+i feel they are coming soon
+i feel it will be great
+i feel things will improve
+i feel we have enough time
+i feel it makes good sense
+i agree that it works well
+i agree you will succeed
+i agree everything is ready
+i agree we are on track
+i agree this is important
+i agree they are coming soon
+i agree it will be great
+i agree things will improve
+i agree we have enough time
+i agree it makes good sense
+i understand that it works well
+i understand you will succeed
+i understand everything is ready
+i understand we are on track
+i understand this is important
+i understand they are coming soon
+i understand it will be great
+i understand things will improve
+i understand we have enough time
+i understand it makes good sense
+i notice that it works well
+i notice you will succeed
+i notice everything is ready
+i notice we are on track
+i notice this is important
+i notice they are coming soon
+i notice it will be great
+i notice things will improve
+i notice we have enough time
+i notice it makes good sense
+i see that it works well
+i see you will succeed
+i see everything is ready
+i see we are on track
+i see this is important
+i see they are coming soon
+i see it will be great
+i see things will improve
+i see we have enough time
+i see it makes good sense
+i expect that it works well
+i expect you will succeed
+i expect everything is ready
+i expect we are on track
+i expect this is important
+i expect they are coming soon
+i expect it will be great
+i expect things will improve
+i expect we have enough time
+i expect it makes good sense
+we think that it works well
+we think you will succeed
+we think everything is ready
+we think we are on track
+we think this is important
+we think they are coming soon
+we think it will be great
+we think things will improve
+we think we have enough time
+we think it makes good sense
+we believe that it works well
+we believe you will succeed
+we believe everything is ready
+we believe we are on track
+we believe this is important
+we believe they are coming soon
+we believe it will be great
+we believe things will improve
+we believe we have enough time
+we believe it makes good sense
+we know that it works well
+we know you will succeed
+we know everything is ready
+we know we are on track
+we know this is important
+we know they are coming soon
+we know it will be great
+we know things will improve
+we know we have enough time
+we know it makes good sense
+we hope that it works well
+we hope you will succeed
+we hope everything is ready
+we hope we are on track
+we hope this is important
+we hope they are coming soon
+we hope it will be great
+we hope things will improve
+we hope we have enough time
+we hope it makes good sense
+we feel that it works well
+we feel you will succeed
+we feel everything is ready
+we feel we are on track
+we feel this is important
+we feel they are coming soon
+we feel it will be great
+we feel things will improve
+we feel we have enough time
+we feel it makes good sense
+we agree that it works well
+we agree you will succeed
+we agree everything is ready
+we agree we are on track
+we agree this is important
+we agree they are coming soon
+we agree it will be great
+we agree things will improve
+we agree we have enough time
+we agree it makes good sense
+we understand that it works well
+we understand you will succeed
+we understand everything is ready
+we understand we are on track
+we understand this is important
+we understand they are coming soon
+we understand it will be great
+we understand things will improve
+we understand we have enough time
+we understand it makes good sense
+we notice that it works well
+we notice you will succeed
+we notice everything is ready
+we notice we are on track
+we notice this is important
+we notice they are coming soon
+we notice it will be great
+we notice things will improve
+we notice we have enough time
+we notice it makes good sense
+we see that it works well
+we see you will succeed
+we see everything is ready
+we see we are on track
+we see this is important
+we see they are coming soon
+we see it will be great
+we see things will improve
+we see we have enough time
+we see it makes good sense
+we expect that it works well
+we expect you will succeed
+we expect everything is ready
+we expect we are on track
+we expect this is important
+we expect they are coming soon
+we expect it will be great
+we expect things will improve
+we expect we have enough time
+we expect it makes good sense
+you think that it works well
+you think you will succeed
+you think everything is ready
+you think we are on track
+you think this is important
+you think they are coming soon
+you think it will be great
+you think things will improve
+you think we have enough time
+you think it makes good sense
+you believe that it works well
+you believe you will succeed
+you believe everything is ready
+you believe we are on track
+you believe this is important
+you believe they are coming soon
+you believe it will be great
+you believe things will improve
+you believe we have enough time
+you believe it makes good sense
+you know that it works well
+you know you will succeed
+you know everything is ready
+you know we are on track
+you know this is important
+you know they are coming soon
+you know it will be great
+you know things will improve
+you know we have enough time
+you know it makes good sense
+you hope that it works well
+you hope you will succeed
+you hope everything is ready
+you hope we are on track
+you hope this is important
+you hope they are coming soon
+you hope it will be great
+you hope things will improve
+you hope we have enough time
+you hope it makes good sense
+you feel that it works well
+you feel you will succeed
+you feel everything is ready
+you feel we are on track
+you feel this is important
+you feel they are coming soon
+you feel it will be great
+you feel things will improve
+you feel we have enough time
+you feel it makes good sense
+you agree that it works well
+you agree you will succeed
+you agree everything is ready
+you agree we are on track
+you agree this is important
+you agree they are coming soon
+you agree it will be great
+you agree things will improve
+you agree we have enough time
+you agree it makes good sense
+you understand that it works well
+you understand you will succeed
+you understand everything is ready
+you understand we are on track
+you understand this is important
+you understand they are coming soon
+you understand it will be great
+you understand things will improve
+you understand we have enough time
+you understand it makes good sense
+you notice that it works well
+you notice you will succeed
+you notice everything is ready
+you notice we are on track
+you notice this is important
+you notice they are coming soon
+you notice it will be great
+you notice things will improve
+you notice we have enough time
+you notice it makes good sense
+you see that it works well
+you see you will succeed
+you see everything is ready
+you see we are on track
+you see this is important
+you see they are coming soon
+you see it will be great
+you see things will improve
+you see we have enough time
+you see it makes good sense
+you expect that it works well
+you expect you will succeed
+you expect everything is ready
+you expect we are on track
+you expect this is important
+you expect they are coming soon
+you expect it will be great
+you expect things will improve
+you expect we have enough time
+you expect it makes good sense
+they think that it works well
+they think you will succeed
+they think everything is ready
+they think we are on track
+they think this is important
+they think they are coming soon
+they think it will be great
+they think things will improve
+they think we have enough time
+they think it makes good sense
+they believe that it works well
+they believe you will succeed
+they believe everything is ready
+they believe we are on track
+they believe this is important
+they believe they are coming soon
+they believe it will be great
+they believe things will improve
+they believe we have enough time
+they believe it makes good sense
+they know that it works well
+they know you will succeed
+they know everything is ready
+they know we are on track
+they know this is important
+they know they are coming soon
+they know it will be great
+they know things will improve
+they know we have enough time
+they know it makes good sense
+they hope that it works well
+they hope you will succeed
+they hope everything is ready
+they hope we are on track
+they hope this is important
+they hope they are coming soon
+they hope it will be great
+they hope things will improve
+they hope we have enough time
+they hope it makes good sense
+they feel that it works well
+they feel you will succeed
+they feel everything is ready
+they feel we are on track
+they feel this is important
+they feel they are coming soon
+they feel it will be great
+they feel things will improve
+they feel we have enough time
+they feel it makes good sense
+they agree that it works well
+they agree you will succeed
+they agree everything is ready
+they agree we are on track
+they agree this is important
+they agree they are coming soon
+they agree it will be great
+they agree things will improve
+they agree we have enough time
+they agree it makes good sense
+they understand that it works well
+they understand you will succeed
+they understand everything is ready
+they understand we are on track
+they understand this is important
+they understand they are coming soon
+they understand it will be great
+they understand things will improve
+they understand we have enough time
+they understand it makes good sense
+they notice that it works well
+they notice you will succeed
+they notice everything is ready
+they notice we are on track
+they notice this is important
+they notice they are coming soon
+they notice it will be great
+they notice things will improve
+they notice we have enough time
+they notice it makes good sense
+they see that it works well
+they see you will succeed
+they see everything is ready
+they see we are on track
+they see this is important
+they see they are coming soon
+they see it will be great
+they see things will improve
+they see we have enough time
+they see it makes good sense
+they expect that it works well
+they expect you will succeed
+they expect everything is ready
+they expect we are on track
+they expect this is important
+they expect they are coming soon
+they expect it will be great
+they expect things will improve
+they expect we have enough time
+they expect it makes good sense
+he think that it works well
+he think you will succeed
+he think everything is ready
+he think we are on track
+he think this is important
+he think they are coming soon
+he think it will be great
+he think things will improve
+he think we have enough time
+he think it makes good sense
+he believe that it works well
+he believe you will succeed
+he believe everything is ready
+he believe we are on track
+he believe this is important
+he believe they are coming soon
+he believe it will be great
+he believe things will improve
+he believe we have enough time
+he believe it makes good sense
+he know that it works well
+he know you will succeed
+he know everything is ready
+he know we are on track
+he know this is important
+he know they are coming soon
+he know it will be great
+he know things will improve
+he know we have enough time
+he know it makes good sense
+he hope that it works well
+he hope you will succeed
+he hope everything is ready
+he hope we are on track
+he hope this is important
+he hope they are coming soon
+he hope it will be great
+he hope things will improve
+he hope we have enough time
+he hope it makes good sense
+he feel that it works well
+he feel you will succeed
+he feel everything is ready
+he feel we are on track
+he feel this is important
+he feel they are coming soon
+he feel it will be great
+he feel things will improve
+he feel we have enough time
+he feel it makes good sense
+how are you
+what do you think
+see you tomorrow
+thank you very much
+can you help me
+i would like to
+let me know when
+it was a great
+have a nice day
+good luck with your
+i am looking forward to
+take care of yourself
+give me a call
+sorry for the late
+let us meet soon
+hope you are well
+do you have time
+we can discuss this
+call me back later
+happy to help you
+please send me the
+i will check it
+what is your opinion
+sounds like a plan
+have a great weekend
+talk to you soon
+it is going to
+where are you going
+thanks for letting me
+it should be fine
+best of luck with
+make sure you are
+i will be there
+glad to hear that
+nice to meet you
+no problem at all
+just wanted to check
+as soon as possible
+let me check my
+let us get started
+keep in touch with
+looking good to me
+that sounds like a
+could you please send
+at the end of
+one of the best
+in front of the
+out of the office
+on the other hand
+by the way i

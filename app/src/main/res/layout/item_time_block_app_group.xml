@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/app_group_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/activity_margin"
+    android:layout_marginTop="4dp"
+    android:layout_marginEnd="@dimen/activity_margin"
+    android:layout_marginBottom="4dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:cardCornerRadius="12dp"
+    app:cardElevation="0dp"
+    app:strokeColor="?attr/colorControlHighlight"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="14dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/app_group_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                tools:text="WhatsApp" />
+
+            <TextView
+                android:id="@+id/app_group_package"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:alpha="0.65"
+                android:ellipsize="end"
+                android:lines="1"
+                android:textSize="12sp"
+                tools:text="com.whatsapp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/app_group_count_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="8dp"
+            android:paddingTop="3dp"
+            android:paddingEnd="8dp"
+            android:paddingBottom="3dp"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            tools:text="3 sessions" />
+
+        <ImageView
+            android:id="@+id/app_group_chevron"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:alpha="0.75"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_chevron_down_vector"
+            app:tint="?attr/colorControlNormal" />
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/personal_dictionary_coordinator"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <org.fossify.commons.views.MyAppBarLayout
+        android:id="@+id/personal_dictionary_appbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/personal_dictionary_toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:background="@color/color_primary"
+            app:title="@string/personal_dictionary"
+            app:titleTextAppearance="@style/AppTheme.ActionBar.TitleTextStyle" />
+
+    </org.fossify.commons.views.MyAppBarLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <org.fossify.commons.views.MyRecyclerView
+            android:id="@+id/learned_words_list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <org.fossify.commons.views.MyTextView
+            android:id="@+id/learned_words_placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:alpha="0.7"
+            android:gravity="center"
+            android:padding="@dimen/activity_margin"
+            android:text="@string/no_learned_words"
+            android:textSize="@dimen/bigger_text_size"
+            android:visibility="gone"
+            tools:visibility="visible" />
+
+    </RelativeLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -54,6 +54,9 @@ class MyKeyboard {
     /** Keyboard rows  */
     private val mRows = ArrayList<Row?>()
 
+    /** Whether this keyboard is a numeric/phone pad layout */
+    var isNumberPad = false
+
     companion object {
         private const val TAG_KEYBOARD = "Keyboard"
         private const val TAG_ROW = "Row"
@@ -73,12 +76,37 @@ class MyKeyboard {
         // Key roles for special keys
         const val KEY_ROLE_TOOLS = "tools"
 
+        // Gboard layout geometry constants (dp)
+        const val KEY_HEIGHT_DP = 47f
+        const val ROW_GAP_DP = 12f
+        const val ROW_PITCH_DP = 59f
+        const val TOP_PADDING_DP = 10f
+        const val GAP_BELOW_ROW4_DP = 12f
+        const val KEY_INSET_H_DP = 3f
+        const val TOOLBAR_H_DP = 44f
+        const val BOTTOM_STRIP_H_DP = 0f
+        const val TOTAL_KEYBOARD_H_DP = 338f
+        const val CORNER_RADIUS_DP = 8f
+
         fun getDimensionOrFraction(a: TypedArray, index: Int, base: Int, defValue: Int): Int {
             val value = a.peekValue(index) ?: return defValue
             return when (value.type) {
                 TypedValue.TYPE_DIMENSION -> a.getDimensionPixelOffset(index, defValue)
                 TypedValue.TYPE_FRACTION -> Math.round(a.getFraction(index, base, base, defValue.toFloat()))
                 else -> defValue
+            }
+        }
+
+        fun getPresetHeightPercentage(preset: Int): Int {
+            return when (preset) {
+                0 -> 70
+                1 -> 80
+                2 -> 90
+                3 -> 100
+                4 -> 120
+                5 -> 140
+                6 -> 160
+                else -> 100
             }
         }
     }
@@ -143,6 +171,9 @@ class MyKeyboard {
 
         /** First row of letters can also be used for inserting numbers by long pressing them, show those numbers  */
         var topSmallNumber: String = ""
+
+        /** Sublabel to display next to the primary label (e.g. "ABC" for "2") */
+        var keySublabel: String = ""
 
         /** Icon to display instead of a label. Icon takes precedence over a label  */
         var icon: Drawable? = null
@@ -221,6 +252,9 @@ class MyKeyboard {
             popupCharacters = a.getText(R.styleable.MyKeyboard_Key_popupCharacters)
             popupResId = a.getResourceId(R.styleable.MyKeyboard_Key_popupKeyboard, 0)
             repeatable = a.getBoolean(R.styleable.MyKeyboard_Key_isRepeatable, false)
+            if (code == KEYCODE_SPACE) {
+                repeatable = false
+            }
             edgeFlags = a.getInt(R.styleable.MyKeyboard_Key_keyEdgeFlags, 0)
             icon = a.getDrawable(R.styleable.MyKeyboard_Key_keyIcon)
             icon?.setBounds(0, 0, icon!!.intrinsicWidth, icon!!.intrinsicHeight)
@@ -229,6 +263,7 @@ class MyKeyboard {
             secondaryIcon?.setBounds(0, 0, secondaryIcon!!.intrinsicWidth, secondaryIcon!!.intrinsicHeight)
 
             topSmallNumber = a.getString(R.styleable.MyKeyboard_Key_topSmallNumber) ?: ""
+            keySublabel = a.getString(R.styleable.MyKeyboard_Key_keySublabel) ?: ""
             role = a.getString(R.styleable.MyKeyboard_Key_keyRole)
 
             a.recycle()
@@ -284,7 +319,7 @@ class MyKeyboard {
         mDefaultHorizontalGap = 0
         mDefaultWidth = mDisplayWidth / 10
         mDefaultHeight = mDefaultWidth
-        mKeyboardHeightMultiplier = getKeyboardHeightMultiplier(context.config.keyboardHeightPercentage)
+        mKeyboardHeightMultiplier = getKeyboardHeightMultiplier(getPresetHeightPercentage(context.config.keyboardHeightPreset))
         mKeys = ArrayList()
         mEnterKeyType = enterKeyType
         loadKeyboard(context, context.resources.getXml(xmlLayoutResId))
@@ -307,7 +342,7 @@ class MyKeyboard {
         row.defaultHeight = mDefaultHeight
         row.defaultWidth = keyWidth
         row.defaultHorizontalGap = mDefaultHorizontalGap
-        mKeyboardHeightMultiplier = getKeyboardHeightMultiplier(context.config.keyboardHeightPercentage)
+        mKeyboardHeightMultiplier = getKeyboardHeightMultiplier(getPresetHeightPercentage(context.config.keyboardHeightPreset))
 
         characters.forEach { character ->
             val key = Key(row)
@@ -428,142 +463,219 @@ class MyKeyboard {
         } catch (e: Exception) {
         }
         mHeight = y
-        applyGboardLayout()
+        applyGboardLayout(context)
     }
 
-    private fun applyGboardLayout() {
+    private fun applyGboardLayout(context: Context) {
         if (mRows.isEmpty() || mKeys.isNullOrEmpty()) return
         val activeRows = mRows.filterNotNull().filter { it.mKeys.isNotEmpty() }
         if (activeRows.isEmpty()) return
 
         val scale = mDisplayWidth / 1080f
-        val sideMargin = (12f * scale).roundToInt()
-        val horizontalGap = (14f * scale).roundToInt()
-        val keyWidth = ((mDisplayWidth - 2 * sideMargin - 9 * horizontalGap) / 10f).roundToInt()
-        val keyHeight = (123f * scale * mKeyboardHeightMultiplier).roundToInt()
-        val verticalGap = (32f * scale * mKeyboardHeightMultiplier).roundToInt()
-        val rowPitch = keyHeight + verticalGap
-        val topPadding = (16f * scale * mKeyboardHeightMultiplier).roundToInt()
+        val allKeys = mKeys ?: return
 
-        val shiftWidth = (145f * scale).roundToInt()
-        val backspaceWidth = (147f * scale).roundToInt()
-        val spaceWidth = (413f * scale).roundToInt()
-        val enterWidth = (147f * scale).roundToInt()
-        val modeChangeWidth = (145f * scale).roundToInt()
+        val digits = setOf("0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
+        isNumberPad = activeRows.size in 4..5 && activeRows.all { it.mKeys.size in 3..4 } &&
+            allKeys.count { it.label.trim() in digits } >= 10
 
-        // Exact row top positions relative to keyboard view (Toolbar is 125 px / 47.6 dp tall):
-        // Row 1: 141 px - 125 px = 16 px (includes 16 px top half-gap padding)
-        // Row 2: 295 px - 125 px = 170 px
-        // Row 3: 450 px - 125 px = 325 px
-        // Row 4: 605 px - 125 px = 480 px
-        val standardRowTops = intArrayOf(16, 170, 325, 480)
+        if (isNumberPad) {
+            val numpadCols = activeRows.maxOfOrNull { it.mKeys.size } ?: 4
+            val numpadMargin = (14f * scale).roundToInt()
+            val numpadGapX = (16f * scale).roundToInt()
+            val numpadGapY = (16f * scale * mKeyboardHeightMultiplier).roundToInt()
+            val numpadKeyWidth = ((mDisplayWidth - 2 * numpadMargin - (numpadCols - 1) * numpadGapX) / numpadCols.toFloat()).roundToInt()
+            val numpadKeyHeight = (142f * scale * mKeyboardHeightMultiplier).roundToInt()
+            val numpadTopPadding = (16f * scale * mKeyboardHeightMultiplier).roundToInt()
+
+            for ((rowIndex, row) in activeRows.withIndex()) {
+                val keys = row.mKeys
+                if (keys.isEmpty()) continue
+                row.defaultHeight = numpadKeyHeight
+
+                val rowY = numpadTopPadding + rowIndex * (numpadKeyHeight + numpadGapY)
+                var curX = numpadMargin
+                for ((keyIndex, key) in keys.withIndex()) {
+                    key.x = curX
+                    key.y = rowY
+                    key.width = numpadKeyWidth
+                    key.height = numpadKeyHeight
+                    key.gap = if (keyIndex == 0) numpadMargin else numpadGapX
+                    curX += numpadKeyWidth + numpadGapX
+                }
+            }
+
+            mDefaultWidth = numpadKeyWidth
+            mDefaultHeight = numpadKeyHeight
+            mDefaultHorizontalGap = numpadGapX
+            mMinWidth = mDisplayWidth
+            mHeight = (numpadTopPadding * 2 + 4 * numpadKeyHeight + 3 * numpadGapY)
+            return
+        }
+
+        val res = context.resources
+        val keyHeight = (res.getDimension(R.dimen.key_height) * mKeyboardHeightMultiplier).roundToInt()
+        val rowGap = (res.getDimension(R.dimen.row_gap) * mKeyboardHeightMultiplier).roundToInt()
+        val rowPitch = keyHeight + rowGap
+        val topPadding = (res.getDimension(R.dimen.keyboard_top_padding) * mKeyboardHeightMultiplier).roundToInt()
+        val keyInsetH = res.getDimension(R.dimen.key_inset_horizontal).roundToInt()
+        val gapBelowRow4 = (res.getDimension(R.dimen.gap_below_row4) * mKeyboardHeightMultiplier).roundToInt()
+
+        // Letter key slot width S = exactly 10% of keyboard width (width / 10)
+        val slotWidth = mDisplayWidth / 10f
+        val visibleKeyWidth = (slotWidth - 2 * keyInsetH).roundToInt()
+        val visibleGap = 2 * keyInsetH // 6dp
 
         for ((rowIndex, row) in activeRows.withIndex()) {
             val keys = row.mKeys
             if (keys.isEmpty()) continue
             row.defaultHeight = keyHeight
-
-            val rowY = if (activeRows.size == 4 && rowIndex < standardRowTops.size) {
-                (standardRowTops[rowIndex] * scale * mKeyboardHeightMultiplier).roundToInt()
-            } else {
-                topPadding + rowIndex * rowPitch
-            }
+            val rowY = topPadding + rowIndex * rowPitch
 
             val hasSpace = keys.any { it.code == KEYCODE_SPACE }
             val hasShiftOrDelete = keys.any { it.code == KEYCODE_SHIFT || it.code == KEYCODE_DELETE }
 
             when {
-                // Row 4: Spacebar row
+                // Row 4: Spacebar row (?123 = 55dp visible, @ = 35dp, emoji = 35dp, Space = 157dp fills remaining, . = 35dp, Enter = 55dp visible)
                 hasSpace -> {
-                    var curX = sideMargin
-                    for ((keyIndex, key) in keys.withIndex()) {
-                        key.height = keyHeight
-                        key.y = rowY
-                        val w = when (key.code) {
-                            KEYCODE_SPACE -> spaceWidth
-                            KEYCODE_ENTER -> enterWidth
-                            KEYCODE_MODE_CHANGE, KEYCODE_SYMBOLS_MODE_CHANGE -> modeChangeWidth
-                            else -> keyWidth
+                    val spaceIndex = keys.indexOfFirst { it.code == KEYCODE_SPACE }
+                    val keysBeforeSpace = keys.subList(0, spaceIndex)
+                    val keysAfterSpace = keys.subList(spaceIndex + 1, keys.size)
+
+                    var curSlotX = 0f
+                    for (key in keysBeforeSpace) {
+                        val keySlotW = when (key.code) {
+                            KEYCODE_MODE_CHANGE, KEYCODE_SYMBOLS_MODE_CHANGE -> 1.5f * slotWidth
+                            else -> 1f * slotWidth
                         }
-                        key.width = w
-                        key.gap = if (keyIndex == 0) sideMargin else horizontalGap
-                        key.x = curX
-                        curX += w + horizontalGap
+                        val slotLeft = curSlotX.roundToInt()
+                        val slotRight = (curSlotX + keySlotW).roundToInt()
+                        key.x = slotLeft + keyInsetH
+                        key.width = (slotRight - slotLeft) - (2 * keyInsetH)
+                        key.y = rowY
+                        key.height = keyHeight
+                        key.gap = if (curSlotX == 0f) keyInsetH else visibleGap
+                        curSlotX += keySlotW
+                    }
+
+                    val rightSlotsTotal = keysAfterSpace.sumOf { key ->
+                        val slotW = when (key.code) {
+                            KEYCODE_ENTER -> 1.5f * slotWidth
+                            else -> 1f * slotWidth
+                        }
+                        slotW.toDouble()
+                    }.toFloat()
+
+                    val spaceSlotLeft = curSlotX.roundToInt()
+                    val spaceSlotRight = (mDisplayWidth - rightSlotsTotal).roundToInt()
+
+                    val spaceKey = keys[spaceIndex]
+                    spaceKey.x = spaceSlotLeft + keyInsetH
+                    spaceKey.width = (spaceSlotRight - spaceSlotLeft) - (2 * keyInsetH)
+                    spaceKey.y = rowY
+                    spaceKey.height = keyHeight
+                    spaceKey.gap = visibleGap
+
+                    var rightCurSlotX = spaceSlotRight.toFloat()
+                    for ((idx, key) in keysAfterSpace.withIndex()) {
+                        val keySlotW = when (key.code) {
+                            KEYCODE_ENTER -> 1.5f * slotWidth
+                            else -> 1f * slotWidth
+                        }
+                        val slotLeft = rightCurSlotX.roundToInt()
+                        val slotRight = if (idx == keysAfterSpace.size - 1) mDisplayWidth else (rightCurSlotX + keySlotW).roundToInt()
+                        key.x = slotLeft + keyInsetH
+                        key.width = (slotRight - slotLeft) - (2 * keyInsetH)
+                        key.y = rowY
+                        key.height = keyHeight
+                        key.gap = visibleGap
+                        rightCurSlotX += keySlotW
                     }
                 }
-                // Row 3: Shift / Delete row
+
+                // Row 3: Shift (1.34S / 1.5S slot, 55dp visible) + 7 keys (1S each) + Backspace (1.34S / 1.5S slot, 55dp visible)
                 hasShiftOrDelete && keys.size > 2 -> {
+                    val shiftSlotW = 1.5f * slotWidth
                     val firstKey = keys.first()
-                    firstKey.x = sideMargin
-                    firstKey.width = shiftWidth
+                    firstKey.x = keyInsetH
+                    firstKey.width = (shiftSlotW - 2 * keyInsetH).roundToInt()
                     firstKey.height = keyHeight
-                    firstKey.gap = sideMargin
+                    firstKey.gap = keyInsetH
                     firstKey.y = rowY
 
-                    var curX = sideMargin + shiftWidth + horizontalGap
+                    var curSlotX = shiftSlotW
                     for (i in 1 until keys.size - 1) {
                         val key = keys[i]
-                        key.x = curX
-                        key.width = keyWidth
+                        val slotLeft = curSlotX.roundToInt()
+                        val slotRight = (curSlotX + slotWidth).roundToInt()
+                        key.x = slotLeft + keyInsetH
+                        key.width = (slotRight - slotLeft) - (2 * keyInsetH)
                         key.height = keyHeight
-                        key.gap = horizontalGap
+                        key.gap = visibleGap
                         key.y = rowY
-                        curX += keyWidth + horizontalGap
+                        curSlotX += slotWidth
                     }
 
                     val lastKey = keys.last()
-                    lastKey.x = curX
-                    lastKey.width = backspaceWidth
+                    val lastSlotLeft = curSlotX.roundToInt()
+                    lastKey.x = lastSlotLeft + keyInsetH
+                    lastKey.width = (mDisplayWidth - keyInsetH) - lastKey.x
                     lastKey.height = keyHeight
-                    lastKey.gap = horizontalGap
+                    lastKey.gap = visibleGap
                     lastKey.y = rowY
                 }
-                // Row 2: 9-key row (centered with half-pitch indent)
+
+                // Row 2: 9 keys (1S each, centered, side margin 0.5S)
                 keys.size == 9 -> {
-                    val keyPitch = keyWidth + horizontalGap
-                    val startX = sideMargin + (keyPitch / 2f).roundToInt()
-                    var curX = startX
+                    val sideSlotMargin = 0.5f * slotWidth
+                    var curSlotX = sideSlotMargin
                     for ((keyIndex, key) in keys.withIndex()) {
-                        key.x = curX
-                        key.width = keyWidth
+                        val slotLeft = curSlotX.roundToInt()
+                        val slotRight = (curSlotX + slotWidth).roundToInt()
+                        key.x = slotLeft + keyInsetH
+                        key.width = (slotRight - slotLeft) - (2 * keyInsetH)
                         key.height = keyHeight
-                        key.gap = if (keyIndex == 0) startX else horizontalGap
+                        key.gap = if (keyIndex == 0) key.x else visibleGap
                         key.y = rowY
-                        curX += keyWidth + horizontalGap
+                        curSlotX += slotWidth
                     }
                 }
-                // Row 1 / 10-key row
+
+                // Row 1: 10 keys (1S each, no side margin)
                 keys.size == 10 -> {
-                    var curX = sideMargin
-                    for ((keyIndex, key) in keys.withIndex()) {
-                        key.x = curX
-                        key.width = keyWidth
+                    for (keyIndex in keys.indices) {
+                        val key = keys[keyIndex]
+                        val slotLeft = (keyIndex * slotWidth).roundToInt()
+                        val slotRight = if (keyIndex == keys.size - 1) mDisplayWidth else ((keyIndex + 1) * slotWidth).roundToInt()
+                        key.x = slotLeft + keyInsetH
+                        key.width = (slotRight - slotLeft) - (2 * keyInsetH)
                         key.height = keyHeight
-                        key.gap = if (keyIndex == 0) sideMargin else horizontalGap
+                        key.gap = if (keyIndex == 0) keyInsetH else visibleGap
                         key.y = rowY
-                        curX += keyWidth + horizontalGap
                     }
                 }
+
                 // General fallback for any other row configuration
                 else -> {
-                    var curX = sideMargin
-                    for ((keyIndex, key) in keys.withIndex()) {
-                        key.x = curX
-                        key.width = keyWidth
+                    val fallbackSlotW = mDisplayWidth.toFloat() / keys.size.toFloat()
+                    for (keyIndex in keys.indices) {
+                        val key = keys[keyIndex]
+                        val slotLeft = (keyIndex * fallbackSlotW).roundToInt()
+                        val slotRight = if (keyIndex == keys.size - 1) mDisplayWidth else ((keyIndex + 1) * fallbackSlotW).roundToInt()
+                        key.x = slotLeft + keyInsetH
+                        key.width = (slotRight - slotLeft) - (2 * keyInsetH)
                         key.height = keyHeight
-                        key.gap = if (keyIndex == 0) sideMargin else horizontalGap
+                        key.gap = if (keyIndex == 0) keyInsetH else visibleGap
                         key.y = rowY
-                        curX += keyWidth + horizontalGap
                     }
                 }
             }
         }
 
-        mDefaultWidth = keyWidth
+        mDefaultWidth = visibleKeyWidth
         mDefaultHeight = keyHeight
-        mDefaultHorizontalGap = horizontalGap
+        mDefaultHorizontalGap = visibleGap
         mMinWidth = mDisplayWidth
-        mHeight = (620f * scale * mKeyboardHeightMultiplier).roundToInt()
+        mHeight = topPadding + (activeRows.size - 1) * rowPitch + keyHeight + gapBelowRow4
     }
 
     private fun parseKeyboardAttributes(res: Resources, parser: XmlResourceParser) {

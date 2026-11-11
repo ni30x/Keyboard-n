@@ -14,6 +14,8 @@
     <application
         android:name="org.fossify.keyboard.App"
         android:allowBackup="true"
+        android:fullBackupContent="@xml/backup_rules"
+        android:dataExtractionRules="@xml/data_extraction_rules"
         android:appCategory="productivity"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_launcher_name"
@@ -36,6 +38,27 @@
             android:configChanges="orientation"
             android:exported="false"
             android:label="@string/manage_clipboard_items"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.InputHistoryActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/input_history"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.PersonalDictionaryActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/personal_dictionary"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
+            android:name=".activities.DebugLogActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/debug_logs_title"
             android:parentActivityName=".activities.SettingsActivity" />
 
         <service
